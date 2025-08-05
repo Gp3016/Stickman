@@ -1,0 +1,2598 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stickman Fighter - Online</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            overflow: hidden;
+        }
+
+        .game-container {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 20px;
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+            backdrop-filter: blur(4px);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+        }
+
+        #gameCanvas {
+            background: linear-gradient(to bottom, #87CEEB 0%, #98D8E8 50%, #90EE90 50%, #7CFC00 100%);
+            border: 3px solid #333;
+            border-radius: 10px;
+            display: block;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .game-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            color: white;
+        }
+
+        .health-bar-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .health-bar {
+            width: 200px;
+            height: 25px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 15px;
+            overflow: hidden;
+            border: 2px solid #333;
+        }
+
+        .health-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #ff4444, #ff6666);
+            transition: width 0.3s ease;
+            border-radius: 13px;
+        }
+
+        .health-fill.player {
+            background: linear-gradient(90deg, #44ff44, #66ff66);
+        }
+
+        .wave-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            color: white;
+            font-size: 18px;
+            font-weight: bold;
+        }
+
+        .lives {
+            display: flex;
+            gap: 5px;
+            align-items: center;
+        }
+
+        .life {
+            width: 20px;
+            height: 20px;
+            background: #ff4444;
+            border-radius: 50%;
+            border: 2px solid white;
+        }
+
+        .charge-bar-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .charge-bar {
+            width: 150px;
+            height: 20px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 10px;
+            overflow: hidden;
+            border: 2px solid #333;
+        }
+
+        .charge-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #ffaa00, #ffdd00);
+            transition: width 0.2s ease;
+            border-radius: 8px;
+        }
+
+        .controls {
+            margin-top: 15px;
+            text-align: center;
+            color: white;
+            font-size: 14px;
+        }
+
+        .controls h3 {
+            margin-bottom: 10px;
+            font-size: 18px;
+        }
+
+        .control-row {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin: 5px 0;
+        }
+
+        .key {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 5px 10px;
+            border-radius: 5px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            font-weight: bold;
+        }
+
+        .game-over {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 30px;
+            border-radius: 15px;
+            text-align: center;
+            display: none;
+        }
+
+        .game-over h2 {
+            font-size: 36px;
+            margin-bottom: 15px;
+        }
+
+        .game-over button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 18px;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .game-over button:hover {
+            transform: scale(1.05);
+        }
+
+        .start-screen {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.9);
+            color: white;
+            padding: 40px;
+            border-radius: 20px;
+            text-align: center;
+        }
+
+        .start-screen h1 {
+            font-size: 48px;
+            margin-bottom: 20px;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .start-screen button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 20px 40px;
+            font-size: 24px;
+            border-radius: 15px;
+            cursor: pointer;
+            transition: transform 0.2s;
+            margin: 10px;
+            display: block;
+            width: 100%;
+            max-width: 300px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .start-screen button:hover {
+            transform: scale(1.05);
+        }
+
+        .character-selection {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.9);
+            color: white;
+            padding: 40px;
+            border-radius: 20px;
+            text-align: center;
+            display: none;
+            max-width: 900px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .character-selection h1 {
+            font-size: 36px;
+            margin-bottom: 30px;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .characters-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .character-card {
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            border-radius: 15px;
+            padding: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .character-card:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: scale(1.05);
+        }
+
+        .character-card.selected {
+            border-color: #667eea;
+            background: rgba(102, 126, 234, 0.3);
+        }
+
+        .character-card.locked {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .character-card.locked::after {
+            content: "🔒";
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            font-size: 24px;
+        }
+
+        .character-preview {
+            width: 100px;
+            height: 120px;
+            margin: 0 auto 15px;
+            position: relative;
+        }
+
+        .character-name {
+            font-size: 20px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .character-stats {
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .stat {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 5px;
+        }
+
+        .stat-bar {
+            width: 60px;
+            height: 8px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 4px;
+            overflow: hidden;
+            margin-left: 10px;
+        }
+
+        .stat-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #44ff44, #66ff66);
+            border-radius: 4px;
+        }
+
+        .start-button-container {
+            margin-top: 30px;
+            text-align: center;
+        }
+
+        #startGameBtn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 20px 60px;
+            font-size: 24px;
+            border-radius: 15px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            margin: 0 auto;
+            display: inline-block;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        #startGameBtn:hover:not(:disabled) {
+            transform: scale(1.05);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+        }
+
+        #startGameBtn:disabled {
+            background: #666;
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+
+        .selection-instruction {
+            margin-bottom: 20px;
+            font-size: 18px;
+            color: #ccc;
+        }
+
+        .mode-selection {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.9);
+            color: white;
+            padding: 40px;
+            border-radius: 20px;
+            text-align: center;
+            display: none;
+            max-width: 600px;
+        }
+
+        .mode-selection h1 {
+            font-size: 36px;
+            margin-bottom: 30px;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .mode-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            justify-content: center;
+            margin-top: 30px;
+        }
+
+        .mode-button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 20px 40px;
+            font-size: 20px;
+            border-radius: 15px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .mode-button:hover {
+            transform: scale(1.05);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+        }
+
+        .mode-description {
+            margin-top: 20px;
+            font-size: 16px;
+            color: #ccc;
+            line-height: 1.6;
+        }
+
+        .special-attack-info {
+            margin-top: 10px;
+            font-size: 12px;
+            color: #ffaa00;
+        }
+
+        .difficulty-selection {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.9);
+            color: white;
+            padding: 40px;
+            border-radius: 20px;
+            text-align: center;
+            display: none;
+            max-width: 500px;
+        }
+
+        .difficulty-selection h1 {
+            font-size: 36px;
+            margin-bottom: 30px;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .difficulty-buttons {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            margin-top: 30px;
+        }
+
+        .difficulty-button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 18px;
+            border-radius: 15px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .difficulty-button:hover {
+            transform: scale(1.05);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+        }
+
+        .difficulty-description {
+            margin-top: 20px;
+            font-size: 14px;
+            color: #ccc;
+            line-height: 1.6;
+        }
+
+        .story-screen {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.9);
+            color: white;
+            padding: 40px;
+            border-radius: 20px;
+            text-align: center;
+            display: none;
+            max-width: 700px;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .story-screen h1 {
+            font-size: 36px;
+            margin-bottom: 20px;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .story-screen h2 {
+            font-size: 24px;
+            margin-bottom: 15px;
+            color: #ffaa00;
+        }
+
+        .story-screen p {
+            font-size: 16px;
+            line-height: 1.6;
+            margin-bottom: 20px;
+            text-align: left;
+        }
+
+        .story-screen .story-button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 18px;
+            border-radius: 15px;
+            cursor: pointer;
+            transition: transform 0.2s;
+            margin-top: 20px;
+        }
+
+        .story-screen .story-button:hover {
+            transform: scale(1.05);
+        }
+
+        .chapter-select {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .chapter-card {
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            border-radius: 15px;
+            padding: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+            position: relative;
+        }
+
+        .chapter-card:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: scale(1.05);
+        }
+
+        .chapter-card.completed {
+            border-color: #44ff44;
+            background: rgba(68, 255, 68, 0.2);
+        }
+
+        .chapter-card.completed::after {
+            content: "✓";
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            font-size: 20px;
+            color: #44ff44;
+        }
+
+        .chapter-card.locked {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .chapter-card.locked::after {
+            content: "🔒";
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            font-size: 20px;
+        }
+
+        .chapter-title {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .chapter-enemy {
+            font-size: 14px;
+            color: #ccc;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 10px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 5px;
+            margin-top: 15px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #44ff44, #66ff66);
+            border-radius: 5px;
+            transition: width 0.3s ease;
+        }
+
+        .online-lobby {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.9);
+            color: white;
+            padding: 40px;
+            border-radius: 20px;
+            text-align: center;
+            display: none;
+            max-width: 600px;
+        }
+
+        .online-lobby h1 {
+            font-size: 36px;
+            margin-bottom: 30px;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .online-status {
+            margin: 20px 0;
+            font-size: 18px;
+        }
+
+        .online-status.connected {
+            color: #44ff44;
+        }
+
+        .online-status.connecting {
+            color: #ffaa00;
+        }
+
+        .online-status.disconnected {
+            color: #ff4444;
+        }
+
+        .room-info {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+
+        .room-code {
+            font-size: 24px;
+            font-weight: bold;
+            color: #ffaa00;
+            margin: 10px 0;
+        }
+
+        .waiting-message {
+            font-size: 16px;
+            color: #ccc;
+            margin: 20px 0;
+        }
+
+        .online-button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 18px;
+            border-radius: 15px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin: 10px;
+        }
+
+        .online-button:hover {
+            transform: scale(1.05);
+        }
+
+        .online-button:disabled {
+            background: #666;
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+
+        .connection-error {
+            color: #ff4444;
+            margin: 20px 0;
+            font-size: 16px;
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <div class="game-info" id="gameInfo">
+            <div class="health-bar-container">
+                <span>Player</span>
+                <div class="health-bar">
+                    <div class="health-fill player" id="playerHealth"></div>
+                </div>
+            </div>
+            <div class="wave-info" id="waveInfo" style="display: none;">
+                <span>Wave: <span id="currentWave">1</span></span>
+                <span>Enemies: <span id="enemiesLeft">1</span></span>
+                <div class="lives" id="livesContainer"></div>
+            </div>
+            <div class="charge-bar-container">
+                <span>Special</span>
+                <div class="charge-bar">
+                    <div class="charge-fill" id="chargeFill"></div>
+                </div>
+            </div>
+            <div class="health-bar-container" id="cpuHealthContainer">
+                <div class="health-bar">
+                    <div class="health-fill cpu" id="cpuHealth"></div>
+                </div>
+                <span id="cpuName">CPU</span>
+            </div>
+        </div>
+        
+        <canvas id="gameCanvas" width="800" height="400"></canvas>
+        
+        <div class="controls">
+            <h3>Controls</h3>
+            <div class="control-row">
+                <span><span class="key">A</span> <span class="key">D</span> Move</span>
+                <span><span class="key">W</span> Jump</span>
+                <span><span class="key">Space</span> Punch</span>
+                <span><span class="key">F</span> Kick</span>
+                <span><span class="key">Q</span> Special</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="start-screen" id="startScreen">
+        <h1>Stickman Fighter</h1>
+        <p>Choose your fighter and defeat the CPU opponent!</p>
+        <button onclick="showStoryMode()">Story Mode</button>
+        <button onclick="showQuickPlay()">Quick Play</button>
+        <button onclick="showOnlineMode()">Online Mode</button>
+    </div>
+
+    <div class="online-lobby" id="onlineLobby">
+        <h1>Online Battle</h1>
+        <div class="online-status" id="onlineStatus">Connecting to server...</div>
+        
+        <div class="room-info" id="roomInfo" style="display: none;">
+            <p>Share this room code with your friend:</p>
+            <div class="room-code" id="roomCode">ROOM123</div>
+            <button class="online-button" onclick="copyRoomCode()">Copy Code</button>
+        </div>
+        
+        <div class="waiting-message" id="waitingMessage">Waiting for another player to join...</div>
+        
+        <div class="connection-error" id="connectionError" style="display: none;">
+            Unable to connect to server. Please try again later.
+        </div>
+        
+        <button class="online-button" id="createRoomBtn" onclick="createRoom()">Create Room</button>
+        <button class="online-button" id="joinRoomBtn" onclick="showJoinRoom()">Join Room</button>
+        <button class="online-button" onclick="showStartScreen()">Back to Menu</button>
+    </div>
+
+    <div class="story-screen" id="storyScreen">
+        <h1 id="storyTitle">The Journey Begins</h1>
+        <div id="storyContent"></div>
+        <button class="story-button" id="storyButton" onclick="nextStory()">Continue</button>
+    </div>
+
+    <div class="character-selection" id="characterSelection">
+        <h1 id="characterSelectionTitle">Select Your Fighter</h1>
+        <p class="selection-instruction" id="selectionInstruction">Click on a character to select them</p>
+        <div class="characters-grid" id="charactersGrid"></div>
+        <div class="start-button-container">
+            <button id="startGameBtn" disabled onclick="showModeSelection()">SELECT MODE</button>
+        </div>
+    </div>
+
+    <div class="mode-selection" id="modeSelection">
+        <h1>Select Game Mode</h1>
+        <div class="mode-buttons">
+            <button class="mode-button" onclick="showDifficultySelection()">Classic Mode</button>
+            <button class="mode-button" onclick="startGame('wave')">Wave Mode</button>
+        </div>
+        <div class="mode-description">
+            <p><strong>Classic Mode:</strong> Fight against a single CPU opponent</p>
+            <p><strong>Wave Mode:</strong> Survive waves of enemies with 3 lives!</p>
+        </div>
+    </div>
+
+    <div class="difficulty-selection" id="difficultySelection">
+        <h1>Select Difficulty</h1>
+        <div class="difficulty-buttons">
+            <button class="difficulty-button" onclick="startGame('classic', 'normal')">Normal</button>
+            <button class="difficulty-button" onclick="startGame('classic', 'hard')">Hard</button>
+        </div>
+        <div class="difficulty-description">
+            <p><strong>Normal:</strong> Standard CPU opponent</p>
+            <p><strong>Hard:</strong> Tougher CPU with more health and damage</p>
+        </div>
+    </div>
+
+    <div class="game-over" id="gameOver">
+        <h2 id="gameOverText">Game Over</h2>
+        <p id="gameOverMessage"></p>
+        <button onclick="showStartScreen()">Back to Menu</button>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        
+        let gameRunning = false;
+        let animationId;
+        let selectedCharacter = null;
+        let gameMode = 'classic';
+        let gameDifficulty = 'normal';
+        let currentWave = 1;
+        let enemies = [];
+        let particles = [];
+        let playerLives = 3;
+        let isRespawning = false;
+        let currentStory = 0;
+        let currentChapter = 0;
+        let unlockedCharacters = ['fighter']; // Start with only the fighter unlocked
+        let storyProgress = {};
+        let isQuickPlayMode = false;
+        let isOnlineMode = false;
+        
+        // WebSocket connection
+        let socket = null;
+        let roomId = null;
+        let isHost = false;
+        let onlinePlayers = {};
+        
+        // Story chapters
+        const storyChapters = [
+            {
+                title: "Prologue: The Beginning",
+                enemy: "fighter",
+                enemyName: "Training Dummy",
+                story: [
+                    {
+                        title: "A New Journey",
+                        text: "You are a young fighter with dreams of becoming the greatest stickman warrior in the land. Your journey begins at the ancient dojo where masters of all fighting styles gather to test their skills."
+                    },
+                    {
+                        title: "First Challenge",
+                        text: "To prove your worth, you must first defeat the Training Dummy - a basic fighter who will test your fundamental skills. Victory here will unlock your first true opponent."
+                    }
+                ]
+            },
+            {
+                title: "Chapter 1: The Speed Demon",
+                enemy: "ninja",
+                enemyName: "Shadowstrike",
+                story: [
+                    {
+                        title: "The Swift Warrior",
+                        text: "After mastering the basics, you hear tales of Shadowstrike, a ninja who moves faster than the eye can see. Many have tried to defeat him, but none have succeeded."
+                    },
+                    {
+                        title: "The Challenge",
+                        text: "Shadowstrike awaits you at the Bamboo Forest. His lightning-fast attacks and unpredictable movements will test your reflexes. Defeat him and learn the art of speed!"
+                    }
+                ]
+            },
+            {
+                title: "Chapter 2: The Iron Giant",
+                enemy: "brawler",
+                enemyName: "Ironfist",
+                story: [
+                    {
+                        title: "The Unbreakable Wall",
+                        text: "Rumors speak of Ironfist, a brawler whose punches can shatter stone and whose body is as tough as iron. He resides in the Mountain Dojo, challenging all who dare approach."
+                    },
+                    {
+                        title: "Strength vs Skill",
+                        text: "Ironfist believes brute force is the ultimate weapon. You must prove that technique and strategy can overcome raw power. Victory will grant you his devastating strength!"
+                    }
+                ]
+            },
+            {
+                title: "Chapter 3: The Sharpshooter",
+                enemy: "cowboy",
+                enemyName: "Deadeye",
+                story: [
+                    {
+                        title: "The Gunslinger",
+                        text: "In the Western Plains, Deadeye the Cowboy reigns supreme. His accuracy is legendary, and his range attacks are unmatched. He fights with honor but shows no mercy."
+                    },
+                    {
+                        title: "Long Range Battle",
+                        text: "Deadeye will test your ability to close distance and fight at range. His special multi-shot technique can overwhelm even the toughest fighters. Learn from his precision!"
+                    }
+                ]
+            },
+            {
+                title: "Chapter 4: The Time Master",
+                enemy: "gentleman",
+                enemyName: "Chronos",
+                story: [
+                    {
+                        title: "Master of Time",
+                        text: "Deep in the Clock Tower, Chronos the Gentleman practices his unique fighting style. He manipulates time itself, slowing his opponents while maintaining perfect composure."
+                    },
+                    {
+                        title: "Against Time",
+                        text: "Fighting Chronos is like fighting time itself. His time field technique can leave you helpless. Defeat him and gain control over the flow of battle!"
+                    }
+                ]
+            },
+            {
+                title: "Chapter 5: The Ultimate Warrior",
+                enemy: "robot",
+                enemyName: "Omega",
+                story: [
+                    {
+                        title: "The Perfect Machine",
+                        text: "In the heart of the Techno-City stands Omega, a robot fighter designed to be the perfect warrior. It combines all fighting styles into one deadly package."
+                    },
+                    {
+                        title: "Final Battle",
+                        text: "This is your ultimate test. Omega has the strength of Ironfist, the speed of Shadowstrike, the range of Deadeye, and the tactical mind of Chronos. Victory here will crown you the greatest stickman fighter!"
+                    }
+                ]
+            }
+        ];
+        
+        // Character definitions with special attacks
+        const characters = [
+            {
+                id: 'brawler',
+                name: 'Brawler',
+                color: '#ff4444',
+                accessories: ['sunglasses'],
+                stats: {
+                    damage: 1.5,
+                    speed: 4,
+                    range: 60,
+                    health: 100
+                },
+                specialAttack: 'groundSlam',
+                specialDescription: 'Ground Slam - Stuns all enemies',
+                description: 'High damage but slower'
+            },
+            {
+                id: 'ninja',
+                name: 'Ninja',
+                color: '#4444ff',
+                accessories: ['headband'],
+                stats: {
+                    damage: 0.8,
+                    speed: 7,
+                    range: 60,
+                    health: 90
+                },
+                specialAttack: 'shadowDash',
+                specialDescription: 'Shadow Dash - Teleport and damage',
+                description: 'Fast but lower damage'
+            },
+            {
+                id: 'cowboy',
+                name: 'Cowboy',
+                color: '#ffaa00',
+                accessories: ['cowboy_hat'],
+                stats: {
+                    damage: 1.0,
+                    speed: 5,
+                    range: 80,
+                    health: 100
+                },
+                specialAttack: 'multiShot',
+                specialDescription: 'Multi Shot - Fires in all directions',
+                description: 'Long range attacks'
+            },
+            {
+                id: 'gentleman',
+                name: 'Gentleman',
+                color: '#aa44ff',
+                accessories: ['top_hat', 'sunglasses'],
+                stats: {
+                    damage: 1.2,
+                    speed: 5,
+                    range: 70,
+                    health: 110
+                },
+                specialAttack: 'timeField',
+                specialDescription: 'Time Field - Slows enemies',
+                description: 'Balanced with extra health'
+            },
+            {
+                id: 'fighter',
+                name: 'Fighter',
+                color: '#4CAF50',
+                accessories: [],
+                stats: {
+                    damage: 1.0,
+                    speed: 5,
+                    range: 60,
+                    health: 100
+                },
+                specialAttack: 'uppercut',
+                specialDescription: 'Uppercut - Launches enemies',
+                description: 'Well-rounded fighter'
+            },
+            {
+                id: 'robot',
+                name: 'Robot',
+                color: '#888888',
+                accessories: ['antenna'],
+                stats: {
+                    damage: 1.3,
+                    speed: 4.5,
+                    range: 65,
+                    health: 120
+                },
+                specialAttack: 'laserBeam',
+                specialDescription: 'Laser Beam - Sweeping attack',
+                description: 'Tank with high health'
+            }
+        ];
+        
+        // Game objects
+        let player = {
+            x: 100,
+            y: 300,
+            width: 40,
+            height: 60,
+            velocityX: 0,
+            velocityY: 0,
+            speed: 5,
+            jumpPower: 15,
+            health: 100,
+            maxHealth: 100,
+            isAttacking: false,
+            attackType: null,
+            attackCooldown: 0,
+            attackFrame: 0,
+            facing: 'right',
+            color: '#4CAF50',
+            accessories: [],
+            damageMultiplier: 1.0,
+            attackRange: 60,
+            charge: 0,
+            maxCharge: 100,
+            specialCooldown: 0,
+            isUsingSpecial: false,
+            id: null
+        };
+        
+        function createEnemy(x = 600, difficulty = 'normal', characterType = 'fighter') {
+            const character = characters.find(c => c.id === characterType);
+            const enemy = {
+                x: x,
+                y: 300,
+                width: 40,
+                height: 60,
+                velocityX: 0,
+                velocityY: 0,
+                speed: 3,
+                jumpPower: 12,
+                health: 100,
+                maxHealth: 100,
+                isAttacking: false,
+                attackType: null,
+                attackCooldown: 0,
+                attackFrame: 0,
+                facing: 'left',
+                color: character.color,
+                accessories: [...character.accessories],
+                aiDecision: 0,
+                aiCooldown: 0,
+                alive: true,
+                slowed: false,
+                slowTimer: 0,
+                characterType: characterType,
+                damageMultiplier: 1.0,
+                attackRange: 60,
+                charge: 0,
+                maxCharge: 100,
+                specialCooldown: 0,
+                isUsingSpecial: false,
+                id: Math.random().toString(36).substr(2, 9)
+            };
+            
+            // Apply character stats
+            enemy.speed = character.stats.speed;
+            enemy.health = character.stats.health;
+            enemy.maxHealth = character.stats.health;
+            enemy.damageMultiplier = character.stats.damage;
+            enemy.attackRange = character.stats.range;
+            
+            // Apply difficulty modifiers
+            if (difficulty === 'hard') {
+                enemy.health *= 1.5;
+                enemy.maxHealth *= 1.5;
+                enemy.speed *= 1.2;
+                enemy.damageMultiplier *= 1.3;
+            }
+            
+            return enemy;
+        }
+        
+        function createParticle(x, y, type = 'death') {
+            const particle = {
+                x: x,
+                y: y,
+                velocityX: (Math.random() - 0.5) * 8,
+                velocityY: (Math.random() - 0.5) * 8,
+                size: Math.random() * 5 + 2,
+                life: 1.0,
+                decay: 0.02,
+                color: type === 'death' ? '#ff4444' : '#44ff44',
+                type: type
+            };
+            
+            if (type === 'spawn') {
+                particle.velocityX *= 0.3;
+                particle.velocityY *= 0.3;
+                particle.decay = 0.01;
+            }
+            
+            return particle;
+        }
+        
+        const gravity = 0.8;
+        const groundY = 300;
+        
+        // Input handling
+        const keys = {};
+        
+        document.addEventListener('keydown', (e) => {
+            keys[e.key.toLowerCase()] = true;
+        });
+        
+        document.addEventListener('keyup', (e) => {
+            keys[e.key.toLowerCase()] = false;
+        });
+        
+        // WebSocket functions
+        function connectToServer() {
+            const status = document.getElementById('onlineStatus');
+            status.textContent = 'Connecting to server...';
+            status.className = 'online-status connecting';
+            
+            // Connect to WebSocket server
+            socket = new WebSocket('ws://localhost:3000');
+            
+            socket.onopen = () => {
+                status.textContent = 'Connected to server';
+                status.className = 'online-status connected';
+                document.getElementById('createRoomBtn').disabled = false;
+                document.getElementById('joinRoomBtn').disabled = false;
+            };
+            
+            socket.onmessage = (event) => {
+                const data = JSON.parse(event.data);
+                handleServerMessage(data);
+            };
+            
+            socket.onclose = () => {
+                status.textContent = 'Disconnected from server';
+                status.className = 'online-status disconnected';
+                document.getElementById('createRoomBtn').disabled = true;
+                document.getElementById('joinRoomBtn').disabled = true;
+            };
+            
+            socket.onerror = () => {
+                document.getElementById('connectionError').style.display = 'block';
+                status.textContent = 'Connection error';
+                status.className = 'online-status disconnected';
+            };
+        }
+        
+        function handleServerMessage(data) {
+            switch (data.type) {
+                case 'roomCreated':
+                    roomId = data.roomId;
+                    isHost = true;
+                    document.getElementById('roomCode').textContent = roomId;
+                    document.getElementById('roomInfo').style.display = 'block';
+                    document.getElementById('waitingMessage').style.display = 'block';
+                    break;
+                    
+                case 'playerJoined':
+                    onlinePlayers[data.playerId] = {
+                        character: data.character,
+                        health: 100,
+                        maxHealth: 100
+                    };
+                    
+                    if (Object.keys(onlinePlayers).length === 2) {
+                        document.getElementById('waitingMessage').textContent = 'Player joined! Starting game...';
+                        setTimeout(() => {
+                            startOnlineGame();
+                        }, 2000);
+                    }
+                    break;
+                    
+                case 'gameState':
+                    // Update game state from server
+                    updateOnlineGameState(data);
+                    break;
+                    
+                case 'playerLeft':
+                    delete onlinePlayers[data.playerId];
+                    if (gameRunning && Object.keys(onlinePlayers).length < 2) {
+                        endOnlineGame('Player disconnected');
+                    }
+                    break;
+            }
+        }
+        
+        function updateOnlineGameState(data) {
+            // Update all players' positions and states
+            Object.keys(data.players).forEach(playerId => {
+                if (playerId !== player.id) {
+                    const playerData = data.players[playerId];
+                    const enemy = enemies.find(e => e.id === playerId);
+                    if (enemy) {
+                        enemy.x = playerData.x;
+                        enemy.y = playerData.y;
+                        enemy.velocityX = playerData.velocityX;
+                        enemy.velocityY = playerData.velocityY;
+                        enemy.facing = playerData.facing;
+                        enemy.isAttacking = playerData.isAttacking;
+                        enemy.attackType = playerData.attackType;
+                        enemy.health = playerData.health;
+                        enemy.charge = playerData.charge;
+                    }
+                }
+            });
+        }
+        
+        function createRoom() {
+            if (!socket || socket.readyState !== WebSocket.OPEN) return;
+            
+            socket.send(JSON.stringify({
+                type: 'createRoom'
+            }));
+        }
+        
+        function showJoinRoom() {
+            const code = prompt('Enter room code:');
+            if (code && socket && socket.readyState === WebSocket.OPEN) {
+                socket.send(JSON.stringify({
+                    type: 'joinRoom',
+                    roomId: code.toUpperCase()
+                }));
+            }
+        }
+        
+        function copyRoomCode() {
+            const roomCode = document.getElementById('roomCode').textContent;
+            navigator.clipboard.writeText(roomCode).then(() => {
+                alert('Room code copied to clipboard!');
+            });
+        }
+        
+        function startOnlineGame() {
+            document.getElementById('onlineLobby').style.display = 'none';
+            
+            gameMode = 'online';
+            gameRunning = true;
+            
+            // Reset game state
+            particles = [];
+            enemies = [];
+            
+            // Setup UI for online mode
+            document.getElementById('waveInfo').style.display = 'none';
+            document.getElementById('cpuHealthContainer').style.display = 'flex';
+            document.getElementById('cpuName').textContent = 'Opponent';
+            
+            // Create player
+            player.id = socket._socket._id || 'player1';
+            player.x = 100;
+            player.y = groundY;
+            player.health = player.maxHealth;
+            player.charge = 0;
+            player.specialCooldown = 0;
+            
+            // Create enemies from other players
+            Object.keys(onlinePlayers).forEach(playerId => {
+                if (playerId !== player.id) {
+                    const enemy = createEnemy(600, 'normal', onlinePlayers[playerId].character);
+                    enemy.id = playerId;
+                    enemy.health = onlinePlayers[playerId].health;
+                    enemies.push(enemy);
+                }
+            });
+            
+            // Apply selected character stats to player
+            const character = characters.find(c => c.id === selectedCharacter.id);
+            player.color = character.color;
+            player.accessories = character.accessories;
+            player.speed = character.stats.speed;
+            player.maxHealth = character.stats.health;
+            player.damageMultiplier = character.stats.damage;
+            player.attackRange = character.stats.range;
+            
+            updateHealthBars();
+            gameLoop();
+        }
+        
+        function endOnlineGame(reason) {
+            gameRunning = false;
+            cancelAnimationFrame(animationId);
+            
+            const gameOverScreen = document.getElementById('gameOver');
+            document.getElementById('gameOverText').textContent = 'Game Over';
+            document.getElementById('gameOverMessage').textContent = reason;
+            gameOverScreen.style.display = 'block';
+            
+            // Reset online state
+            onlinePlayers = {};
+            roomId = null;
+            isHost = false;
+        }
+        
+        // Navigation functions
+        function showStartScreen() {
+            document.getElementById('startScreen').style.display = 'block';
+            document.getElementById('gameOver').style.display = 'none';
+            document.getElementById('storyScreen').style.display = 'none';
+            document.getElementById('characterSelection').style.display = 'none';
+            document.getElementById('modeSelection').style.display = 'none';
+            document.getElementById('difficultySelection').style.display = 'none';
+            document.getElementById('onlineLobby').style.display = 'none';
+            
+            // Close WebSocket connection
+            if (socket) {
+                socket.close();
+                socket = null;
+            }
+        }
+        
+        function showOnlineMode() {
+            document.getElementById('startScreen').style.display = 'none';
+            document.getElementById('onlineLobby').style.display = 'block';
+            document.getElementById('connectionError').style.display = 'none';
+            document.getElementById('roomInfo').style.display = 'none';
+            document.getElementById('waitingMessage').style.display = 'none';
+            document.getElementById('createRoomBtn').disabled = true;
+            document.getElementById('joinRoomBtn').disabled = true;
+            
+            // Reset online state
+            onlinePlayers = {};
+            roomId = null;
+            isHost = false;
+            
+            connectToServer();
+        }
+        
+        function showStoryMode() {
+            document.getElementById('startScreen').style.display = 'none';
+            document.getElementById('storyScreen').style.display = 'block';
+            currentStory = 0;
+            currentChapter = 0;
+            isQuickPlayMode = false;
+            isOnlineMode = false;
+            showStoryIntroduction();
+        }
+        
+        function showQuickPlay() {
+            isQuickPlayMode = true;
+            isOnlineMode = false;
+            showCharacterSelection();
+        }
+        
+        // Story mode functions
+        function showStoryIntroduction() {
+            const storyScreen = document.getElementById('storyScreen');
+            const storyTitle = document.getElementById('storyTitle');
+            const storyContent = document.getElementById('storyContent');
+            const storyButton = document.getElementById('storyButton');
+            
+            storyTitle.textContent = "The Journey of a Warrior";
+            storyContent.innerHTML = `
+                <p>In a world where stickmen warriors battle for supremacy, you begin your journey as an unknown fighter with dreams of glory.</p>
+                <p>Legend speaks of six masters, each possessing unique fighting styles and devastating special attacks. To become the ultimate warrior, you must defeat them all and claim their powers as your own.</p>
+                <p>Are you ready to embark on this epic journey and write your name in the annals of stickman history?</p>
+                <div class="progress-bar">
+                    <div class="progress-fill" style="width: ${(unlockedCharacters.length / characters.length) * 100}%"></div>
+                </div>
+                <p style="margin-top: 10px; font-size: 14px;">Progress: ${unlockedCharacters.length}/${characters.length} characters unlocked</p>
+            `;
+            storyButton.textContent = "Begin Journey";
+            storyButton.onclick = showChapterSelect;
+        }
+        
+        function showChapterSelect() {
+            const storyScreen = document.getElementById('storyScreen');
+            const storyTitle = document.getElementById('storyTitle');
+            const storyContent = document.getElementById('storyContent');
+            const storyButton = document.getElementById('storyButton');
+            
+            storyTitle.textContent = "Select Your Chapter";
+            
+            let chaptersHTML = '<div class="chapter-select">';
+            storyChapters.forEach((chapter, index) => {
+                const isCompleted = storyProgress[chapter.enemy] || false;
+                const isUnlocked = index === 0 || storyProgress[storyChapters[index - 1].enemy];
+                
+                chaptersHTML += `
+                    <div class="chapter-card ${isCompleted ? 'completed' : ''} ${!isUnlocked ? 'locked' : ''}" 
+                         onclick="${isUnlocked ? `startStoryChapter(${index})` : ''}" 
+                         style="position: relative;">
+                        <div class="chapter-title">${chapter.title}</div>
+                        <div class="chapter-enemy">vs ${chapter.enemyName}</div>
+                        ${isCompleted ? '<div style="color: #44ff44; font-size: 12px; margin-top: 5px;">✓ Completed</div>' : ''}
+                    </div>
+                `;
+            });
+            chaptersHTML += '</div>';
+            
+            storyContent.innerHTML = chaptersHTML;
+            storyButton.textContent = "Back";
+            storyButton.onclick = showStoryIntroduction;
+        }
+        
+        function startStoryChapter(chapterIndex) {
+            currentChapter = chapterIndex;
+            const chapter = storyChapters[chapterIndex];
+            currentStory = 0;
+            
+            const storyScreen = document.getElementById('storyScreen');
+            const storyTitle = document.getElementById('storyTitle');
+            const storyContent = document.getElementById('storyContent');
+            const storyButton = document.getElementById('storyButton');
+            
+            storyTitle.textContent = chapter.title;
+            showStoryChapter();
+        }
+        
+        function showStoryChapter() {
+            const chapter = storyChapters[currentChapter];
+            const storyPart = chapter.story[currentStory];
+            
+            const storyScreen = document.getElementById('storyScreen');
+            const storyTitle = document.getElementById('storyTitle');
+            const storyContent = document.getElementById('storyContent');
+            const storyButton = document.getElementById('storyButton');
+            
+            storyTitle.textContent = storyPart.title;
+            storyContent.innerHTML = `<p>${storyPart.text}</p>`;
+            
+            if (currentStory < chapter.story.length - 1) {
+                storyButton.textContent = "Continue";
+                storyButton.onclick = () => {
+                    currentStory++;
+                    showStoryChapter();
+                };
+            } else {
+                storyButton.textContent = "Begin Battle";
+                storyButton.onclick = () => {
+                    document.getElementById('storyScreen').style.display = 'none';
+                    startStoryBattle();
+                };
+            }
+        }
+        
+        function nextStory() {
+            currentStory++;
+            if (currentStory < storyChapters[currentChapter].story.length) {
+                showStoryChapter();
+            } else {
+                startStoryBattle();
+            }
+        }
+        
+        function startStoryBattle() {
+            const chapter = storyChapters[currentChapter];
+            selectedCharacter = characters.find(c => c.id === unlockedCharacters[unlockedCharacters.length - 1]);
+            
+            gameMode = 'story';
+            gameDifficulty = 'normal';
+            gameRunning = true;
+            
+            // Reset game state
+            playerLives = 3;
+            currentWave = 1;
+            particles = [];
+            
+            // Setup UI for story mode
+            document.getElementById('waveInfo').style.display = 'none';
+            document.getElementById('cpuHealthContainer').style.display = 'flex';
+            document.getElementById('cpuName').textContent = chapter.enemyName;
+            
+            // Create enemy
+            enemies = [createEnemy(600, 'normal', chapter.enemy)];
+            
+            // Apply selected character stats to player
+            player.color = selectedCharacter.color;
+            player.accessories = selectedCharacter.accessories;
+            player.speed = selectedCharacter.stats.speed;
+            player.health = selectedCharacter.stats.health;
+            player.maxHealth = selectedCharacter.stats.health;
+            player.damageMultiplier = selectedCharacter.stats.damage;
+            player.attackRange = selectedCharacter.stats.range;
+            player.charge = 0;
+            player.specialCooldown = 0;
+            
+            // Reset player position
+            player.x = 100;
+            player.y = groundY;
+            player.velocityX = 0;
+            player.velocityY = 0;
+            player.isAttacking = false;
+            player.attackType = null;
+            player.attackCooldown = 0;
+            player.attackFrame = 0;
+            isRespawning = false;
+            
+            updateHealthBars();
+            gameLoop();
+        }
+        
+        function completeStoryChapter() {
+            const chapter = storyChapters[currentChapter];
+            const enemyId = chapter.enemy;
+            
+            // Mark chapter as completed
+            storyProgress[enemyId] = true;
+            
+            // Unlock the character
+            if (!unlockedCharacters.includes(enemyId)) {
+                unlockedCharacters.push(enemyId);
+            }
+            
+            // Show victory screen
+            const storyScreen = document.getElementById('storyScreen');
+            const storyTitle = document.getElementById('storyTitle');
+            const storyContent = document.getElementById('storyContent');
+            const storyButton = document.getElementById('storyButton');
+            
+            storyScreen.style.display = 'block';
+            storyTitle.textContent = "Victory!";
+            
+            const character = characters.find(c => c.id === enemyId);
+            storyContent.innerHTML = `
+                <p style="color: #44ff44; font-size: 18px; margin-bottom: 15px;">You have defeated ${chapter.enemyName}!</p>
+                <p>${character.name} has been unlocked and their fighting style is now yours to master.</p>
+                <p style="margin-top: 15px;"><strong>New Special Attack Unlocked:</strong> ${character.specialDescription}</p>
+                <div class="progress-bar">
+                    <div class="progress-fill" style="width: ${(unlockedCharacters.length / characters.length) * 100}%"></div>
+                </div>
+                <p style="margin-top: 10px; font-size: 14px;">Progress: ${unlockedCharacters.length}/${characters.length} characters unlocked</p>
+            `;
+            
+            if (currentChapter < storyChapters.length - 1) {
+                storyButton.textContent = "Next Chapter";
+                storyButton.onclick = () => {
+                    currentChapter++;
+                    startStoryChapter(currentChapter);
+                };
+            } else {
+                storyButton.textContent = "Complete Journey";
+                storyButton.onclick = () => {
+                    storyTitle.textContent = "Congratulations!";
+                    storyContent.innerHTML = `
+                        <p style="color: #ffaa00; font-size: 24px; margin-bottom: 20px;">You have become the ultimate stickman fighter!</p>
+                        <p>You have defeated all six masters and mastered their fighting styles. Your name will be remembered throughout history as the greatest warrior who ever lived.</p>
+                        <p style="margin-top: 15px;">All characters and special attacks are now unlocked in Quick Play mode.</p>
+                    `;
+                    storyButton.textContent = "Return to Menu";
+                    storyButton.onclick = showStartScreen;
+                };
+            }
+        }
+        
+        // Character selection functions
+        function showCharacterSelection() {
+            document.getElementById('startScreen').style.display = 'none';
+            document.getElementById('gameOver').style.display = 'none';
+            document.getElementById('characterSelection').style.display = 'block';
+            
+            // Update title and instruction based on mode
+            const title = document.getElementById('characterSelectionTitle');
+            const instruction = document.getElementById('selectionInstruction');
+            
+            if (isQuickPlayMode) {
+                title.textContent = "Select Your Fighter";
+                instruction.textContent = "All characters are available in Quick Play!";
+            } else if (isOnlineMode) {
+                title.textContent = "Select Your Fighter";
+                instruction.textContent = "Choose your character for online battle";
+            } else {
+                title.textContent = "Select Your Fighter";
+                instruction.textContent = "Click on a character to select them";
+            }
+            
+            const grid = document.getElementById('charactersGrid');
+            grid.innerHTML = '';
+            
+            characters.forEach(char => {
+                const isUnlocked = isQuickPlayMode || isOnlineMode || unlockedCharacters.includes(char.id);
+                const card = document.createElement('div');
+                card.className = `character-card ${!isUnlocked ? 'locked' : ''}`;
+                if (isUnlocked) {
+                    card.onclick = () => selectCharacter(char);
+                }
+                
+                const preview = document.createElement('div');
+                preview.className = 'character-preview';
+                
+                const name = document.createElement('div');
+                name.className = 'character-name';
+                name.textContent = char.name;
+                
+                const stats = document.createElement('div');
+                stats.className = 'character-stats';
+                
+                // Create stat bars
+                const damageStat = createStat('Damage', char.stats.damage, 1.5);
+                const speedStat = createStat('Speed', char.stats.speed, 7);
+                const rangeStat = createStat('Range', char.stats.range, 80);
+                const healthStat = createStat('Health', char.stats.health, 120);
+                
+                stats.appendChild(damageStat);
+                stats.appendChild(speedStat);
+                stats.appendChild(rangeStat);
+                stats.appendChild(healthStat);
+                
+                const desc = document.createElement('div');
+                desc.style.fontSize = '12px';
+                desc.style.marginTop = '10px';
+                desc.style.color = '#ccc';
+                desc.textContent = char.description;
+                
+                const special = document.createElement('div');
+                special.className = 'special-attack-info';
+                special.textContent = char.specialDescription;
+                
+                card.appendChild(preview);
+                card.appendChild(name);
+                card.appendChild(stats);
+                card.appendChild(desc);
+                card.appendChild(special);
+                grid.appendChild(card);
+                
+                // Draw character preview
+                setTimeout(() => {
+                    const canvas = document.createElement('canvas');
+                    canvas.width = 100;
+                    canvas.height = 120;
+                    preview.appendChild(canvas);
+                    const ctx = canvas.getContext('2d');
+                    
+                    // Draw mini character
+                    const miniChar = {
+                        x: 30,
+                        y: 60,
+                        width: 40,
+                        height: 60,
+                        color: char.color,
+                        accessories: char.accessories,
+                        facing: 'right'
+                    };
+                    
+                    ctx.strokeStyle = char.color;
+                    ctx.lineWidth = 3;
+                    ctx.lineCap = 'round';
+                    
+                    // Head
+                    ctx.beginPath();
+                    ctx.arc(50, 50, 8, 0, Math.PI * 2);
+                    ctx.stroke();
+                    
+                    // Accessories (mini version)
+                    char.accessories.forEach(acc => {
+                        drawMiniAccessory(ctx, 50, 50, acc);
+                    });
+                    
+                    // Body
+                    ctx.beginPath();
+                    ctx.moveTo(50, 58);
+                    ctx.lineTo(50, 78);
+                    ctx.stroke();
+                    
+                    // Arms
+                    ctx.beginPath();
+                    ctx.moveTo(50, 63);
+                    ctx.lineTo(40, 73);
+                    ctx.stroke();
+                    ctx.beginPath();
+                    ctx.moveTo(50, 63);
+                    ctx.lineTo(60, 73);
+                    ctx.stroke();
+                    
+                    // Legs
+                    ctx.beginPath();
+                    ctx.moveTo(50, 78);
+                    ctx.lineTo(40, 98);
+                    ctx.stroke();
+                    ctx.beginPath();
+                    ctx.moveTo(50, 78);
+                    ctx.lineTo(60, 98);
+                    ctx.stroke();
+                }, 10);
+            });
+        }
+        
+        function drawMiniAccessory(ctx, x, y, accessory) {
+            ctx.save();
+            ctx.strokeStyle = '#333';
+            ctx.fillStyle = '#333';
+            ctx.lineWidth = 1;
+            
+            switch(accessory) {
+                case 'sunglasses':
+                    ctx.fillRect(x - 8, y - 2, 16, 2);
+                    ctx.beginPath();
+                    ctx.arc(x - 4, y - 2, 3, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.beginPath();
+                    ctx.arc(x + 4, y - 2, 3, 0, Math.PI * 2);
+                    ctx.fill();
+                    break;
+                case 'cowboy_hat':
+                    ctx.fillRect(x - 10, y - 15, 20, 10);
+                    ctx.fillRect(x - 13, y - 5, 26, 2);
+                    break;
+                case 'top_hat':
+                    ctx.fillRect(x - 6, y - 18, 12, 13);
+                    ctx.fillRect(x - 10, y - 5, 20, 2);
+                    break;
+                case 'headband':
+                    ctx.fillRect(x - 8, y - 8, 16, 2);
+                    ctx.fillStyle = '#ff0000';
+                    ctx.fillRect(x - 1, y - 11, 2, 3);
+                    break;
+                case 'antenna':
+                    ctx.fillRect(x - 1, y - 10, 2, 10);
+                    ctx.beginPath();
+                    ctx.arc(x, y - 20, 2, 0, Math.PI * 2);
+                    ctx.fill();
+                    break;
+            }
+            
+            ctx.restore();
+        }
+        
+        function createStat(name, value, max) {
+            const stat = document.createElement('div');
+            stat.className = 'stat';
+            
+            const label = document.createElement('span');
+            label.textContent = name;
+            
+            const bar = document.createElement('div');
+            bar.className = 'stat-bar';
+            
+            const fill = document.createElement('div');
+            fill.className = 'stat-fill';
+            fill.style.width = `${(value / max) * 100}%`;
+            
+            bar.appendChild(fill);
+            stat.appendChild(label);
+            stat.appendChild(bar);
+            
+            return stat;
+        }
+        
+        function selectCharacter(character) {
+            selectedCharacter = character;
+            
+            // Update UI
+            document.querySelectorAll('.character-card').forEach(card => {
+                card.classList.remove('selected');
+            });
+            event.currentTarget.classList.add('selected');
+            
+            // Enable start button
+            const startBtn = document.getElementById('startGameBtn');
+            startBtn.disabled = false;
+            startBtn.textContent = 'SELECT MODE';
+            
+            // Scroll to button
+            startBtn.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+        
+        function showModeSelection() {
+            if (!selectedCharacter) {
+                alert('Please select a character first!');
+                return;
+            }
+            
+            document.getElementById('characterSelection').style.display = 'none';
+            document.getElementById('modeSelection').style.display = 'block';
+        }
+        
+        function showDifficultySelection() {
+            document.getElementById('modeSelection').style.display = 'none';
+            document.getElementById('difficultySelection').style.display = 'block';
+        }
+        
+        // Special attack functions
+        function useSpecialAttack() {
+            if (player.charge < player.maxCharge || player.specialCooldown > 0) return;
+            
+            player.isUsingSpecial = true;
+            player.charge = 0;
+            player.specialCooldown = 180; // 3 seconds at 60fps
+            
+            switch(selectedCharacter.specialAttack) {
+                case 'groundSlam':
+                    groundSlam();
+                    break;
+                case 'shadowDash':
+                    shadowDash();
+                    break;
+                case 'multiShot':
+                    multiShot();
+                    break;
+                case 'timeField':
+                    timeField();
+                    break;
+                case 'uppercut':
+                    uppercut();
+                    break;
+                case 'laserBeam':
+                    laserBeam();
+                    break;
+            }
+            
+            setTimeout(() => {
+                player.isUsingSpecial = false;
+            }, 500);
+        }
+        
+        function groundSlam() {
+            // Create shockwave effect
+            for (let i = 0; i < 30; i++) {
+                particles.push(createParticle(player.x + player.width/2, player.y + player.height, 'death'));
+            }
+            
+            // Damage all enemies in range
+            enemies.forEach(enemy => {
+                if (enemy.alive) {
+                    const distance = Math.abs(enemy.x - player.x);
+                    if (distance < 150) {
+                        enemy.health -= 40;
+                        enemy.velocityY = -15; // Launch enemies
+                        if (enemy.health <= 0) {
+                            enemy.alive = false;
+                            createDeathEffect(enemy.x + enemy.width/2, enemy.y + enemy.height/2);
+                        }
+                    }
+                }
+            });
+        }
+        
+        function shadowDash() {
+            const dashDistance = player.facing === 'right' ? 200 : -200;
+            const startX = player.x;
+            const endX = player.x + dashDistance;
+            
+            // Create shadow trail
+            for (let i = 0; i < 10; i++) {
+                setTimeout(() => {
+                    const trailX = startX + (dashDistance * i / 10);
+                    for (let j = 0; j < 5; j++) {
+                        particles.push(createParticle(trailX + player.width/2, player.y + player.height/2, 'spawn'));
+                    }
+                }, i * 20);
+            }
+            
+            // Teleport and damage enemies along the path
+            player.x = endX;
+            if (player.x < 0) player.x = 0;
+            if (player.x + player.width > canvas.width) player.x = canvas.width - player.width;
+            
+            enemies.forEach(enemy => {
+                if (enemy.alive && 
+                    ((player.facing === 'right' && enemy.x > startX && enemy.x < endX) ||
+                     (player.facing === 'left' && enemy.x < startX && enemy.x > endX))) {
+                    enemy.health -= 30;
+                    if (enemy.health <= 0) {
+                        enemy.alive = false;
+                        createDeathEffect(enemy.x + enemy.width/2, enemy.y + enemy.height/2);
+                    }
+                }
+            });
+        }
+        
+        function multiShot() {
+            const angles = [0, 45, 90, 135, 180, 225, 270, 315];
+            
+            angles.forEach(angle => {
+                const rad = angle * Math.PI / 180;
+                const projectile = {
+                    x: player.x + player.width/2,
+                    y: player.y + 20,
+                    velocityX: Math.cos(rad) * 8,
+                    velocityY: Math.sin(rad) * 8,
+                    life: 60,
+                    damage: 25
+                };
+                
+                // Animate projectile
+                const animateProjectile = () => {
+                    if (projectile.life <= 0) return;
+                    
+                    projectile.x += projectile.velocityX;
+                    projectile.y += projectile.velocityY;
+                    projectile.life--;
+                    
+                    // Draw projectile
+                    ctx.save();
+                    ctx.fillStyle = '#ffaa00';
+                    ctx.beginPath();
+                    ctx.arc(projectile.x, projectile.y, 5, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.restore();
+                    
+                    // Check collision with enemies
+                    enemies.forEach(enemy => {
+                        if (enemy.alive) {
+                            const distance = Math.sqrt(
+                                Math.pow(enemy.x + enemy.width/2 - projectile.x, 2) + 
+                                Math.pow(enemy.y + enemy.height/2 - projectile.y, 2)
+                            );
+                            if (distance < 20) {
+                                enemy.health -= projectile.damage;
+                                if (enemy.health <= 0) {
+                                    enemy.alive = false;
+                                    createDeathEffect(enemy.x + enemy.width/2, enemy.y + enemy.height/2);
+                                }
+                                projectile.life = 0;
+                            }
+                        }
+                    });
+                    
+                    if (projectile.life > 0) {
+                        requestAnimationFrame(animateProjectile);
+                    }
+                };
+                
+                setTimeout(() => animateProjectile(), angle * 10);
+            });
+        }
+        
+        function timeField() {
+            // Create time field effect
+            for (let i = 0; i < 20; i++) {
+                const angle = (i / 20) * Math.PI * 2;
+                const x = player.x + player.width/2 + Math.cos(angle) * 100;
+                const y = player.y + player.height/2 + Math.sin(angle) * 100;
+                particles.push(createParticle(x, y, 'spawn'));
+            }
+            
+            // Slow all enemies
+            enemies.forEach(enemy => {
+                if (enemy.alive) {
+                    enemy.slowed = true;
+                    enemy.slowTimer = 300; // 5 seconds
+                    enemy.speed *= 0.3;
+                }
+            });
+        }
+        
+        function uppercut() {
+            // Create upward effect
+            for (let i = 0; i < 15; i++) {
+                particles.push(createParticle(player.x + player.width/2, player.y, 'spawn'));
+            }
+            
+            // Damage and launch nearby enemies
+            enemies.forEach(enemy => {
+                if (enemy.alive) {
+                    const distance = Math.abs(enemy.x - player.x);
+                    if (distance < 80) {
+                        enemy.health -= 35;
+                        enemy.velocityY = -20; // Strong launch
+                        enemy.velocityX = (enemy.x < player.x ? -10 : 10);
+                        if (enemy.health <= 0) {
+                            enemy.alive = false;
+                            createDeathEffect(enemy.x + enemy.width/2, enemy.y + enemy.height/2);
+                        }
+                    }
+                }
+            });
+        }
+        
+        function laserBeam() {
+            const beamWidth = 20;
+            const beamLength = canvas.width;
+            const startX = player.facing === 'right' ? player.x + player.width : player.x;
+            const endX = player.facing === 'right' ? canvas.width : 0;
+            
+            // Animate laser sweep
+            let sweepProgress = 0;
+            const sweepSpeed = 0.05;
+            
+            const animateLaser = () => {
+                if (sweepProgress >= 1) return;
+                
+                sweepProgress += sweepSpeed;
+                
+                // Draw laser
+                ctx.save();
+                ctx.globalAlpha = 0.8;
+                ctx.fillStyle = '#ff0000';
+                ctx.fillRect(startX, player.y + 20, (endX - startX) * sweepProgress, beamWidth);
+                ctx.restore();
+                
+                // Create laser particles
+                for (let i = 0; i < 3; i++) {
+                    const x = startX + (endX - startX) * sweepProgress;
+                    const y = player.y + 20 + Math.random() * beamWidth;
+                    particles.push(createParticle(x, y, 'death'));
+                }
+                
+                // Check collision with enemies
+                enemies.forEach(enemy => {
+                    if (enemy.alive) {
+                        const enemyCenterX = enemy.x + enemy.width/2;
+                        const enemyCenterY = enemy.y + enemy.height/2;
+                        if (enemyCenterX >= startX && enemyCenterX <= startX + (endX - startX) * sweepProgress &&
+                            enemyCenterY >= player.y + 20 && enemyCenterY <= player.y + 20 + beamWidth) {
+                            enemy.health -= 2; // Continuous damage
+                            if (enemy.health <= 0) {
+                                enemy.alive = false;
+                                createDeathEffect(enemy.x + enemy.width/2, enemy.y + enemy.height/2);
+                            }
+                        }
+                    }
+                });
+                
+                requestAnimationFrame(animateLaser);
+            };
+            
+            animateLaser();
+        }
+        
+        // Update functions
+        function updatePlayer() {
+            if (isRespawning) return;
+            
+            // Movement
+            if (keys['a']) {
+                player.velocityX = -player.speed;
+                player.facing = 'left';
+            } else if (keys['d']) {
+                player.velocityX = player.speed;
+                player.facing = 'right';
+            } else {
+                player.velocityX *= 0.8;
+            }
+            
+            // Jump
+            if (keys['w'] && player.y >= groundY) {
+                player.velocityY = -player.jumpPower;
+            }
+            
+            // Special attack
+            if (keys['q']) {
+                useSpecialAttack();
+            }
+            
+            // Attacks
+            if (player.attackCooldown <= 0) {
+                if (keys[' ']) {
+                    player.isAttacking = true;
+                    player.attackType = 'punch';
+                    player.attackCooldown = 30;
+                    player.attackFrame = 0;
+                    // Add charge (1.5x rate)
+                    if (player.charge < player.maxCharge) {
+                        player.charge += 15;
+                    }
+                    // Check collision with all enemies
+                    enemies.forEach(enemy => {
+                        if (enemy.alive) {
+                            checkAttackCollision(player, enemy, 15 * player.damageMultiplier);
+                        }
+                    });
+                } else if (keys['f']) {
+                    player.isAttacking = true;
+                    player.attackType = 'kick';
+                    player.attackCooldown = 40;
+                    player.attackFrame = 0;
+                    // Add charge (1.5x rate)
+                    if (player.charge < player.maxCharge) {
+                        player.charge += 23;
+                    }
+                    // Check collision with all enemies
+                    enemies.forEach(enemy => {
+                        if (enemy.alive) {
+                            checkAttackCollision(player, enemy, 20 * player.damageMultiplier);
+                        }
+                    });
+                }
+            } else {
+                player.attackCooldown--;
+                player.attackFrame++;
+                if (player.attackCooldown <= 20) {
+                    player.isAttacking = false;
+                    player.attackType = null;
+                }
+            }
+            
+            // Update special cooldown
+            if (player.specialCooldown > 0) {
+                player.specialCooldown--;
+            }
+            
+            // Physics
+            player.velocityY += gravity;
+            player.x += player.velocityX;
+            player.y += player.velocityY;
+            
+            // Boundaries
+            if (player.x < 0) player.x = 0;
+            if (player.x + player.width > canvas.width) player.x = canvas.width - player.width;
+            if (player.y > groundY) {
+                player.y = groundY;
+                player.velocityY = 0;
+            }
+        }
+        
+        function updateEnemy(enemy) {
+            if (!enemy.alive) return;
+            
+            // Update slow effect
+            if (enemy.slowed) {
+                enemy.slowTimer--;
+                if (enemy.slowTimer <= 0) {
+                    enemy.slowed = false;
+                    // Reset speed based on character
+                    const character = characters.find(c => c.id === enemy.characterType);
+                    enemy.speed = character.stats.speed;
+                }
+            }
+            
+            // AI Decision Making (only for non-online modes)
+            if (gameMode !== 'online') {
+                if (enemy.aiCooldown <= 0) {
+                    const distance = Math.abs(player.x - enemy.x);
+                    enemy.aiDecision = Math.random();
+                    
+                    if (distance > 150) {
+                        // Move towards player
+                        if (player.x < enemy.x) {
+                            enemy.velocityX = -enemy.speed;
+                            enemy.facing = 'left';
+                        } else {
+                            enemy.velocityX = enemy.speed;
+                            enemy.facing = 'right';
+                        }
+                    } else if (distance < 80) {
+                        // Move away if too close
+                        if (player.x < enemy.x) {
+                            enemy.velocityX = enemy.speed;
+                            enemy.facing = 'right';
+                        } else {
+                            enemy.velocityX = -enemy.speed;
+                            enemy.facing = 'left';
+                        }
+                    } else {
+                        enemy.velocityX *= 0.8;
+                    }
+                    
+                    // Special attack AI for story mode
+                    if (gameMode === 'story' && enemy.charge >= enemy.maxCharge && enemy.specialCooldown <= 0) {
+                        useEnemySpecialAttack(enemy);
+                    }
+                    
+                    // Attack decision
+                    if (distance < 100 && enemy.attackCooldown <= 0) {
+                        if (enemy.aiDecision < 0.6) {
+                            enemy.isAttacking = true;
+                            enemy.attackType = 'punch';
+                            enemy.attackCooldown = 35;
+                            enemy.attackFrame = 0;
+                            checkAttackCollision(enemy, player, 15 * (enemy.damageMultiplier || 1));
+                            // Add charge for enemy
+                            if (enemy.charge < enemy.maxCharge) {
+                                enemy.charge += 15;
+                            }
+                        } else {
+                            enemy.isAttacking = true;
+                            enemy.attackType = 'kick';
+                            enemy.attackCooldown = 45;
+                            enemy.attackFrame = 0;
+                            checkAttackCollision(enemy, player, 20 * (enemy.damageMultiplier || 1));
+                            // Add charge for enemy
+                            if (enemy.charge < enemy.maxCharge) {
+                                enemy.charge += 23;
+                            }
+                        }
+                    }
+                    
+                    // Jump decision
+                    if (enemy.aiDecision < 0.1 && enemy.y >= groundY) {
+                        enemy.velocityY = -enemy.jumpPower;
+                    }
+                    
+                    enemy.aiCooldown = 30;
+                } else {
+                    enemy.aiCooldown--;
+                }
+            }
+            
+            // Physics
+            enemy.velocityY += gravity;
+            enemy.x += enemy.velocityX;
+            enemy.y += enemy.velocityY;
+            
+            // Boundaries
+            if (enemy.x < 0) enemy.x = 0;
+            if (enemy.x + enemy.width > canvas.width) enemy.x = canvas.width - player.width;
+            if (enemy.y > groundY) {
+                enemy.y = groundY;
+                enemy.velocityY = 0;
+            }
+            
+            // Attack cooldown
+            if (enemy.attackCooldown > 0) {
+                enemy.attackCooldown--;
+                enemy.attackFrame++;
+                if (enemy.attackCooldown <= 25) {
+                    enemy.isAttacking = false;
+                    enemy.attackType = null;
+                }
+            }
+        }
+        
+        function useEnemySpecialAttack(enemy) {
+            enemy.isUsingSpecial = true;
+            enemy.charge = 0;
+            enemy.specialCooldown = 180;
+            
+            const character = characters.find(c => c.id === enemy.characterType);
+            
+            // Simulate special attack (simplified version)
+            switch(character.specialAttack) {
+                case 'groundSlam':
+                    // Ground slam effect
+                    for (let i = 0; i < 20; i++) {
+                        particles.push(createParticle(enemy.x + enemy.width/2, enemy.y + enemy.height, 'death'));
+                    }
+                    if (Math.abs(player.x - enemy.x) < 150) {
+                        player.health -= 30;
+                        player.velocityY = -10;
+                    }
+                    break;
+                case 'shadowDash':
+                    // Shadow dash towards player
+                    const dashDistance = player.x < enemy.x ? -150 : 150;
+                    enemy.x += dashDistance;
+                    if (Math.abs(player.x - enemy.x) < 50) {
+                        player.health -= 25;
+                    }
+                    break;
+            }
+            
+            setTimeout(() => {
+                enemy.isUsingSpecial = false;
+            }, 500);
+        }
+        
+        function checkAttackCollision(attacker, defender, damage) {
+            const distance = Math.abs(attacker.x - defender.x);
+            const range = attacker.attackRange || 60;
+            if (distance < range && Math.abs(attacker.y - defender.y) < 50) {
+                defender.health -= damage;
+                defender.health = Math.max(0, defender.health);
+                
+                if (defender.health <= 0 && defender !== player) {
+                    defender.alive = false;
+                    createDeathEffect(defender.x + defender.width/2, defender.y + defender.height/2);
+                }
+                
+                updateHealthBars();
+                
+                // Knockback
+                const knockback = attacker.facing === 'right' ? 10 : -10;
+                defender.velocityX = knockback;
+                defender.velocityY = -5;
+            }
+        }
+        
+        function updateHealthBars() {
+            document.getElementById('playerHealth').style.width = 
+                `${(player.health / player.maxHealth) * 100}%`;
+            
+            if (gameMode === 'classic' && enemies.length > 0) {
+                document.getElementById('cpuHealth').style.width = 
+                    `${(enemies[0].health / enemies[0].maxHealth) * 100}%`;
+            }
+            
+            // Update charge bar
+            document.getElementById('chargeFill').style.width = 
+                `${(player.charge / player.maxCharge) * 100}%`;
+            
+            // Update wave info
+            if (gameMode === 'wave') {
+                const aliveEnemies = enemies.filter(e => e.alive).length;
+                document.getElementById('currentWave').textContent = currentWave;
+                document.getElementById('enemiesLeft').textContent = aliveEnemies;
+            }
+        }
+        
+        function checkWaveComplete() {
+            if (gameMode === 'wave') {
+                const aliveEnemies = enemies.filter(e => e.alive).length;
+                if (aliveEnemies === 0) {
+                    // Wave complete, spawn next wave
+                    currentWave++;
+                    spawnWave();
+                }
+            }
+        }
+        
+        function spawnWave() {
+            enemies = [];
+            for (let i = 0; i < currentWave; i++) {
+                const x = 600 + (i * 80); // Spread enemies out
+                enemies.push(createEnemy(x));
+            }
+        }
+        
+        function respawnPlayer() {
+            isRespawning = true;
+            playerLives--;
+            
+            // Update lives display
+            updateLivesDisplay();
+            
+            if (playerLives <= 0) {
+                endGame('Game Over', `You survived ${currentWave} wave${currentWave > 1 ? 's' : ''}!`);
+                return;
+            }
+            
+            // Reset player
+            player.health = player.maxHealth;
+            player.x = 100;
+            player.y = groundY;
+            player.velocityX = 0;
+            player.velocityY = 0;
+            
+            // Create spawn effect
+            createSpawnEffect(player.x + player.width/2, player.y + player.height/2);
+            
+            // Temporary invincibility
+            setTimeout(() => {
+                isRespawning = false;
+            }, 2000);
+        }
+        
+        function updateLivesDisplay() {
+            const livesContainer = document.getElementById('livesContainer');
+            livesContainer.innerHTML = '';
+            for (let i = 0; i < playerLives; i++) {
+                const life = document.createElement('div');
+                life.className = 'life';
+                livesContainer.appendChild(life);
+            }
+        }
+        
+        function checkGameOver() {
+            if (player.health <= 0) {
+                if (gameMode === 'wave' && playerLives > 0) {
+                    respawnPlayer();
+                } else {
+                    let message = '';
+                    if (gameMode === 'classic') {
+                        message = gameDifficulty === 'hard' ? 'The Hard CPU was too strong!' : 'The CPU was too strong this time.';
+                    } else if (gameMode === 'story') {
+                        message = 'You were defeated. Try again!';
+                    } else if (gameMode === 'online') {
+                        message = 'You lost the match!';
+                    } else {
+                        message = `You survived ${currentWave} wave${currentWave > 1 ? 's' : ''}!`;
+                    }
+                    endGame('Game Over', message);
+                }
+            } else if (gameMode === 'classic' && enemies.length > 0 && enemies[0].health <= 0) {
+                endGame('You Win!', 'Congratulations! You defeated the CPU!');
+            } else if (gameMode === 'story' && enemies.length > 0 && enemies[0].health <= 0) {
+                gameRunning = false;
+                cancelAnimationFrame(animationId);
+                completeStoryChapter();
+            } else if (gameMode === 'online') {
+                // Check if any player won
+                const aliveEnemies = enemies.filter(e => e.alive);
+                if (aliveEnemies.length === 0) {
+                    endOnlineGame('You won the match!');
+                } else if (player.health <= 0) {
+                    endOnlineGame('You lost the match!');
+                }
+            }
+        }
+        
+        function gameLoop() {
+            if (!gameRunning) return;
+            
+            // Send game state to server in online mode
+            if (gameMode === 'online' && socket && socket.readyState === WebSocket.OPEN) {
+                const gameState = {
+                    type: 'gameState',
+                    players: {}
+                };
+                
+                // Add player state
+                gameState.players[player.id] = {
+                    x: player.x,
+                    y: player.y,
+                    velocityX: player.velocityX,
+                    velocityY: player.velocityY,
+                    facing: player.facing,
+                    isAttacking: player.isAttacking,
+                    attackType: player.attackType,
+                    health: player.health,
+                    charge: player.charge
+                };
+                
+                // Add enemy states (other players)
+                enemies.forEach(enemy => {
+                    gameState.players[enemy.id] = {
+                        x: enemy.x,
+                        y: enemy.y,
+                        velocityX: enemy.velocityX,
+                        velocityY: enemy.velocityY,
+                        facing: enemy.facing,
+                        isAttacking: enemy.isAttacking,
+                        attackType: enemy.attackType,
+                        health: enemy.health,
+                        charge: enemy.charge
+                    };
+                });
+                
+                socket.send(JSON.stringify(gameState));
+            }
+            
+            // Clear canvas
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Draw ground
+            ctx.fillStyle = '#8B4513';
+            ctx.fillRect(0, groundY + 60, canvas.width, 40);
+            
+            // Update and draw player
+            updatePlayer();
+            drawStickman(player, 'Player');
+            
+            // Update and draw enemies
+            enemies.forEach(enemy => {
+                updateEnemy(enemy);
+                if (enemy.alive) {
+                    drawStickman(enemy, 'Enemy');
+                    // Draw health bars only in wave mode
+                    if (gameMode === 'wave') {
+                        drawEnemyHealthBar(enemy);
+                    }
+                }
+            });
+            
+            // Draw particles
+            drawParticles();
+            
+            // Check wave completion
+            checkWaveComplete();
+            
+            // Check game over
+            checkGameOver();
+            
+            animationId = requestAnimationFrame(gameLoop);
+        }
+        
+        function startGame(mode, difficulty = 'normal') {
+            gameMode = mode;
+            gameDifficulty = difficulty;
+            
+            if (mode === 'classic') {
+                document.getElementById('difficultySelection').style.display = 'none';
+            } else {
+                document.getElementById('modeSelection').style.display = 'none';
+            }
+            
+            gameRunning = true;
+            
+            // Reset game state
+            playerLives = 3;
+            currentWave = 1;
+            particles = [];
+            
+            // Setup UI based on mode
+            if (mode === 'classic') {
+                document.getElementById('waveInfo').style.display = 'none';
+                document.getElementById('cpuHealthContainer').style.display = 'flex';
+                enemies = [createEnemy(600, difficulty)];
+            } else { // wave mode
+                document.getElementById('waveInfo').style.display = 'flex';
+                document.getElementById('cpuHealthContainer').style.display = 'none';
+                updateLivesDisplay();
+                spawnWave();
+            }
+            
+            // Apply selected character stats to player
+            player.color = selectedCharacter.color;
+            player.accessories = selectedCharacter.accessories;
+            player.speed = selectedCharacter.stats.speed;
+            player.health = selectedCharacter.stats.health;
+            player.maxHealth = selectedCharacter.stats.health;
+            player.damageMultiplier = selectedCharacter.stats.damage;
+            player.attackRange = selectedCharacter.stats.range;
+            player.charge = 0;
+            player.specialCooldown = 0;
+            
+            // Reset player position
+            player.x = 100;
+            player.y = groundY;
+            player.velocityX = 0;
+            player.velocityY = 0;
+            player.isAttacking = false;
+            player.attackType = null;
+            player.attackCooldown = 0;
+            player.attackFrame = 0;
+            isRespawning = false;
+            
+            updateHealthBars();
+            gameLoop();
+        }
+        
+        function endGame(title, message) {
+            gameRunning = false;
+            cancelAnimationFrame(animationId);
+            document.getElementById('gameOverText').textContent = title;
+            document.getElementById('gameOverMessage').textContent = message;
+            document.getElementById('gameOver').style.display = 'block';
+        }
+        
+        function drawEnemyHealthBar(enemy) {
+            if (!enemy.alive) return;
+            
+            const barWidth = 100; // Half the size of normal health bars
+            const barHeight = 12;
+            const x = enemy.x + enemy.width/2 - barWidth/2;
+            const y = enemy.y - 30;
+            
+            // Background
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
+            ctx.fillRect(x, y, barWidth, barHeight);
+            
+            // Border
+            ctx.strokeStyle = '#333';
+            ctx.lineWidth = 1;
+            ctx.strokeRect(x, y, barWidth, barHeight);
+            
+            // Health fill
+            const healthPercent = enemy.health / enemy.maxHealth;
+            ctx.fillStyle = healthPercent > 0.5 ? '#44ff44' : healthPercent > 0.25 ? '#ffaa00' : '#ff4444';
+            ctx.fillRect(x + 1, y + 1, (barWidth - 2) * healthPercent, barHeight - 2);
+        }
+        
+        function drawParticles() {
+            particles.forEach((particle, index) => {
+                ctx.save();
+                ctx.globalAlpha = particle.life;
+                ctx.fillStyle = particle.color;
+                ctx.beginPath();
+                ctx.arc(particle.x, particle.y, particle.size, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.restore();
+                
+                // Update particle
+                particle.x += particle.velocityX;
+                particle.y += particle.velocityY;
+                particle.life -= particle.decay;
+                particle.velocityY += 0.2; // gravity
+                
+                if (particle.life <= 0) {
+                    particles.splice(index, 1);
+                }
+            });
+        }
+        
+        function createDeathEffect(x, y) {
+            for (let i = 0; i < 20; i++) {
+                particles.push(createParticle(x, y, 'death'));
+            }
+        }
+        
+        function createSpawnEffect(x, y) {
+            for (let i = 0; i < 15; i++) {
+                particles.push(createParticle(x, y, 'spawn'));
+            }
+        }
+        
+        // Initialize health bars
+        updateHealthBars();
+    </script>
+</body>
+</html>
