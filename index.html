@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Stickman Fighter - Online</title>
+    <title>Stickman Fighter</title>
     <style>
         * {
             margin: 0;
@@ -70,6 +70,10 @@
 
         .health-fill.player {
             background: linear-gradient(90deg, #44ff44, #66ff66);
+        }
+
+        .health-fill.player2 {
+            background: linear-gradient(90deg, #4444ff, #6666ff);
         }
 
         .wave-info {
@@ -206,12 +210,7 @@
             border-radius: 15px;
             cursor: pointer;
             transition: transform 0.2s;
-            margin: 10px;
-            display: block;
-            width: 100%;
-            max-width: 300px;
-            margin-left: auto;
-            margin-right: auto;
+            margin-top: 20px;
         }
 
         .start-screen button:hover {
@@ -231,8 +230,6 @@
             display: none;
             max-width: 900px;
             width: 90%;
-            max-height: 80vh;
-            overflow-y: auto;
         }
 
         .character-selection h1 {
@@ -257,7 +254,6 @@
             padding: 20px;
             cursor: pointer;
             transition: all 0.3s ease;
-            position: relative;
         }
 
         .character-card:hover {
@@ -268,19 +264,6 @@
         .character-card.selected {
             border-color: #667eea;
             background: rgba(102, 126, 234, 0.3);
-        }
-
-        .character-card.locked {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
-
-        .character-card.locked::after {
-            content: "🔒";
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            font-size: 24px;
         }
 
         .character-preview {
@@ -383,17 +366,17 @@
 
         .mode-buttons {
             display: flex;
-            flex-direction: column;
             gap: 20px;
             justify-content: center;
             margin-top: 30px;
+            flex-wrap: wrap;
         }
 
         .mode-button {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
             border: none;
-            padding: 20px 40px;
+            padding: 20px 30px;
             font-size: 20px;
             border-radius: 15px;
             cursor: pointer;
@@ -472,136 +455,6 @@
             line-height: 1.6;
         }
 
-        .story-screen {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: rgba(0, 0, 0, 0.9);
-            color: white;
-            padding: 40px;
-            border-radius: 20px;
-            text-align: center;
-            display: none;
-            max-width: 700px;
-            max-height: 80vh;
-            overflow-y: auto;
-        }
-
-        .story-screen h1 {
-            font-size: 36px;
-            margin-bottom: 20px;
-            background: linear-gradient(45deg, #667eea, #764ba2);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-
-        .story-screen h2 {
-            font-size: 24px;
-            margin-bottom: 15px;
-            color: #ffaa00;
-        }
-
-        .story-screen p {
-            font-size: 16px;
-            line-height: 1.6;
-            margin-bottom: 20px;
-            text-align: left;
-        }
-
-        .story-screen .story-button {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border: none;
-            padding: 15px 30px;
-            font-size: 18px;
-            border-radius: 15px;
-            cursor: pointer;
-            transition: transform 0.2s;
-            margin-top: 20px;
-        }
-
-        .story-screen .story-button:hover {
-            transform: scale(1.05);
-        }
-
-        .chapter-select {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 15px;
-            margin: 20px 0;
-        }
-
-        .chapter-card {
-            background: rgba(255, 255, 255, 0.1);
-            border: 2px solid rgba(255, 255, 255, 0.2);
-            border-radius: 15px;
-            padding: 20px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            text-align: center;
-            position: relative;
-        }
-
-        .chapter-card:hover {
-            background: rgba(255, 255, 255, 0.2);
-            transform: scale(1.05);
-        }
-
-        .chapter-card.completed {
-            border-color: #44ff44;
-            background: rgba(68, 255, 68, 0.2);
-        }
-
-        .chapter-card.completed::after {
-            content: "✓";
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            font-size: 20px;
-            color: #44ff44;
-        }
-
-        .chapter-card.locked {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
-
-        .chapter-card.locked::after {
-            content: "🔒";
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            font-size: 20px;
-        }
-
-        .chapter-title {
-            font-size: 18px;
-            font-weight: bold;
-            margin-bottom: 10px;
-        }
-
-        .chapter-enemy {
-            font-size: 14px;
-            color: #ccc;
-        }
-
-        .progress-bar {
-            width: 100%;
-            height: 10px;
-            background: rgba(255, 255, 255, 0.2);
-            border-radius: 5px;
-            margin-top: 15px;
-            overflow: hidden;
-        }
-
-        .progress-fill {
-            height: 100%;
-            background: linear-gradient(90deg, #44ff44, #66ff66);
-            border-radius: 5px;
-            transition: width 0.3s ease;
-        }
-
         .online-lobby {
             position: absolute;
             top: 50%;
@@ -613,7 +466,7 @@
             border-radius: 20px;
             text-align: center;
             display: none;
-            max-width: 600px;
+            max-width: 500px;
         }
 
         .online-lobby h1 {
@@ -624,79 +477,87 @@
             -webkit-text-fill-color: transparent;
         }
 
-        .online-status {
-            margin: 20px 0;
+        .lobby-status {
             font-size: 18px;
-        }
-
-        .online-status.connected {
-            color: #44ff44;
-        }
-
-        .online-status.connecting {
-            color: #ffaa00;
-        }
-
-        .online-status.disconnected {
-            color: #ff4444;
-        }
-
-        .room-info {
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 10px;
-            padding: 20px;
-            margin: 20px 0;
-        }
-
-        .room-code {
-            font-size: 24px;
-            font-weight: bold;
-            color: #ffaa00;
-            margin: 10px 0;
-        }
-
-        .waiting-message {
-            font-size: 16px;
+            margin-bottom: 20px;
             color: #ccc;
-            margin: 20px 0;
         }
 
-        .online-button {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        .loading-spinner {
+            display: inline-block;
+            width: 40px;
+            height: 40px;
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: #667eea;
+            animation: spin 1s ease-in-out infinite;
+            margin: 20px auto;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .cancel-button {
+            background: #ff4444;
             color: white;
             border: none;
-            padding: 15px 30px;
-            font-size: 18px;
-            border-radius: 15px;
+            padding: 10px 20px;
+            font-size: 16px;
+            border-radius: 10px;
             cursor: pointer;
             transition: all 0.3s ease;
-            margin: 10px;
+            margin-top: 20px;
         }
 
-        .online-button:hover {
+        .cancel-button:hover {
+            background: #ff6666;
             transform: scale(1.05);
         }
 
-        .online-button:disabled {
-            background: #666;
-            cursor: not-allowed;
-            opacity: 0.6;
+        .connection-status {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-size: 12px;
+            font-weight: bold;
         }
 
-        .connection-error {
-            color: #ff4444;
-            margin: 20px 0;
-            font-size: 16px;
+        .connected {
+            background: #44ff44;
+            color: #000;
+        }
+
+        .disconnected {
+            background: #ff4444;
+            color: #fff;
+        }
+
+        .player2-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: white;
         }
     </style>
 </head>
 <body>
     <div class="game-container">
+        <div class="connection-status disconnected" id="connectionStatus">Disconnected</div>
+        
         <div class="game-info" id="gameInfo">
             <div class="health-bar-container">
-                <span>Player</span>
+                <span>Player 1</span>
                 <div class="health-bar">
                     <div class="health-fill player" id="playerHealth"></div>
+                </div>
+            </div>
+            <div class="player2-info" id="player2Info" style="display: none;">
+                <span>Player 2</span>
+                <div class="health-bar">
+                    <div class="health-fill player2" id="player2Health"></div>
                 </div>
             </div>
             <div class="wave-info" id="waveInfo" style="display: none;">
@@ -714,7 +575,7 @@
                 <div class="health-bar">
                     <div class="health-fill cpu" id="cpuHealth"></div>
                 </div>
-                <span id="cpuName">CPU</span>
+                <span>CPU</span>
             </div>
         </div>
         
@@ -735,41 +596,12 @@
     <div class="start-screen" id="startScreen">
         <h1>Stickman Fighter</h1>
         <p>Choose your fighter and defeat the CPU opponent!</p>
-        <button onclick="showStoryMode()">Story Mode</button>
-        <button onclick="showQuickPlay()">Quick Play</button>
-        <button onclick="showOnlineMode()">Online Mode</button>
-    </div>
-
-    <div class="online-lobby" id="onlineLobby">
-        <h1>Online Battle</h1>
-        <div class="online-status" id="onlineStatus">Connecting to server...</div>
-        
-        <div class="room-info" id="roomInfo" style="display: none;">
-            <p>Share this room code with your friend:</p>
-            <div class="room-code" id="roomCode">ROOM123</div>
-            <button class="online-button" onclick="copyRoomCode()">Copy Code</button>
-        </div>
-        
-        <div class="waiting-message" id="waitingMessage">Waiting for another player to join...</div>
-        
-        <div class="connection-error" id="connectionError" style="display: none;">
-            Unable to connect to server. Please try again later.
-        </div>
-        
-        <button class="online-button" id="createRoomBtn" onclick="createRoom()">Create Room</button>
-        <button class="online-button" id="joinRoomBtn" onclick="showJoinRoom()">Join Room</button>
-        <button class="online-button" onclick="showStartScreen()">Back to Menu</button>
-    </div>
-
-    <div class="story-screen" id="storyScreen">
-        <h1 id="storyTitle">The Journey Begins</h1>
-        <div id="storyContent"></div>
-        <button class="story-button" id="storyButton" onclick="nextStory()">Continue</button>
+        <button onclick="showCharacterSelection()">Choose Character</button>
     </div>
 
     <div class="character-selection" id="characterSelection">
-        <h1 id="characterSelectionTitle">Select Your Fighter</h1>
-        <p class="selection-instruction" id="selectionInstruction">Click on a character to select them</p>
+        <h1>Select Your Fighter</h1>
+        <p class="selection-instruction">Click on a character to select them</p>
         <div class="characters-grid" id="charactersGrid"></div>
         <div class="start-button-container">
             <button id="startGameBtn" disabled onclick="showModeSelection()">SELECT MODE</button>
@@ -781,10 +613,12 @@
         <div class="mode-buttons">
             <button class="mode-button" onclick="showDifficultySelection()">Classic Mode</button>
             <button class="mode-button" onclick="startGame('wave')">Wave Mode</button>
+            <button class="mode-button" onclick="enterOnlineMode()">Online Mode</button>
         </div>
         <div class="mode-description">
             <p><strong>Classic Mode:</strong> Fight against a single CPU opponent</p>
             <p><strong>Wave Mode:</strong> Survive waves of enemies with 3 lives!</p>
+            <p><strong>Online Mode:</strong> Battle against other players online!</p>
         </div>
     </div>
 
@@ -800,12 +634,20 @@
         </div>
     </div>
 
+    <div class="online-lobby" id="onlineLobby">
+        <h1>Online Mode</h1>
+        <div class="lobby-status" id="lobbyStatus">Connecting to server...</div>
+        <div class="loading-spinner"></div>
+        <button class="cancel-button" onclick="cancelOnlineMode()">Cancel</button>
+    </div>
+
     <div class="game-over" id="gameOver">
         <h2 id="gameOverText">Game Over</h2>
         <p id="gameOverMessage"></p>
-        <button onclick="showStartScreen()">Back to Menu</button>
+        <button onclick="showCharacterSelection()">Play Again</button>
     </div>
 
+    <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
     <script>
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
@@ -820,112 +662,11 @@
         let particles = [];
         let playerLives = 3;
         let isRespawning = false;
-        let currentStory = 0;
-        let currentChapter = 0;
-        let unlockedCharacters = ['fighter']; // Start with only the fighter unlocked
-        let storyProgress = {};
-        let isQuickPlayMode = false;
         let isOnlineMode = false;
-        
-        // WebSocket connection
         let socket = null;
         let roomId = null;
-        let isHost = false;
-        let onlinePlayers = {};
-        
-        // Story chapters
-        const storyChapters = [
-            {
-                title: "Prologue: The Beginning",
-                enemy: "fighter",
-                enemyName: "Training Dummy",
-                story: [
-                    {
-                        title: "A New Journey",
-                        text: "You are a young fighter with dreams of becoming the greatest stickman warrior in the land. Your journey begins at the ancient dojo where masters of all fighting styles gather to test their skills."
-                    },
-                    {
-                        title: "First Challenge",
-                        text: "To prove your worth, you must first defeat the Training Dummy - a basic fighter who will test your fundamental skills. Victory here will unlock your first true opponent."
-                    }
-                ]
-            },
-            {
-                title: "Chapter 1: The Speed Demon",
-                enemy: "ninja",
-                enemyName: "Shadowstrike",
-                story: [
-                    {
-                        title: "The Swift Warrior",
-                        text: "After mastering the basics, you hear tales of Shadowstrike, a ninja who moves faster than the eye can see. Many have tried to defeat him, but none have succeeded."
-                    },
-                    {
-                        title: "The Challenge",
-                        text: "Shadowstrike awaits you at the Bamboo Forest. His lightning-fast attacks and unpredictable movements will test your reflexes. Defeat him and learn the art of speed!"
-                    }
-                ]
-            },
-            {
-                title: "Chapter 2: The Iron Giant",
-                enemy: "brawler",
-                enemyName: "Ironfist",
-                story: [
-                    {
-                        title: "The Unbreakable Wall",
-                        text: "Rumors speak of Ironfist, a brawler whose punches can shatter stone and whose body is as tough as iron. He resides in the Mountain Dojo, challenging all who dare approach."
-                    },
-                    {
-                        title: "Strength vs Skill",
-                        text: "Ironfist believes brute force is the ultimate weapon. You must prove that technique and strategy can overcome raw power. Victory will grant you his devastating strength!"
-                    }
-                ]
-            },
-            {
-                title: "Chapter 3: The Sharpshooter",
-                enemy: "cowboy",
-                enemyName: "Deadeye",
-                story: [
-                    {
-                        title: "The Gunslinger",
-                        text: "In the Western Plains, Deadeye the Cowboy reigns supreme. His accuracy is legendary, and his range attacks are unmatched. He fights with honor but shows no mercy."
-                    },
-                    {
-                        title: "Long Range Battle",
-                        text: "Deadeye will test your ability to close distance and fight at range. His special multi-shot technique can overwhelm even the toughest fighters. Learn from his precision!"
-                    }
-                ]
-            },
-            {
-                title: "Chapter 4: The Time Master",
-                enemy: "gentleman",
-                enemyName: "Chronos",
-                story: [
-                    {
-                        title: "Master of Time",
-                        text: "Deep in the Clock Tower, Chronos the Gentleman practices his unique fighting style. He manipulates time itself, slowing his opponents while maintaining perfect composure."
-                    },
-                    {
-                        title: "Against Time",
-                        text: "Fighting Chronos is like fighting time itself. His time field technique can leave you helpless. Defeat him and gain control over the flow of battle!"
-                    }
-                ]
-            },
-            {
-                title: "Chapter 5: The Ultimate Warrior",
-                enemy: "robot",
-                enemyName: "Omega",
-                story: [
-                    {
-                        title: "The Perfect Machine",
-                        text: "In the heart of the Techno-City stands Omega, a robot fighter designed to be the perfect warrior. It combines all fighting styles into one deadly package."
-                    },
-                    {
-                        title: "Final Battle",
-                        text: "This is your ultimate test. Omega has the strength of Ironfist, the speed of Shadowstrike, the range of Deadeye, and the tactical mind of Chronos. Victory here will crown you the greatest stickman fighter!"
-                    }
-                ]
-            }
-        ];
+        let isPlayer1 = true;
+        let player2Data = null;
         
         // Character definitions with special attacks
         const characters = [
@@ -1045,12 +786,36 @@
             charge: 0,
             maxCharge: 100,
             specialCooldown: 0,
-            isUsingSpecial: false,
-            id: null
+            isUsingSpecial: false
         };
         
-        function createEnemy(x = 600, difficulty = 'normal', characterType = 'fighter') {
-            const character = characters.find(c => c.id === characterType);
+        let player2 = {
+            x: 600,
+            y: 300,
+            width: 40,
+            height: 60,
+            velocityX: 0,
+            velocityY: 0,
+            speed: 5,
+            jumpPower: 15,
+            health: 100,
+            maxHealth: 100,
+            isAttacking: false,
+            attackType: null,
+            attackCooldown: 0,
+            attackFrame: 0,
+            facing: 'left',
+            color: '#4444ff',
+            accessories: [],
+            damageMultiplier: 1.0,
+            attackRange: 60,
+            charge: 0,
+            maxCharge: 100,
+            specialCooldown: 0,
+            isUsingSpecial: false
+        };
+        
+        function createEnemy(x = 600, difficulty = 'normal') {
             const enemy = {
                 x: x,
                 y: 300,
@@ -1067,36 +832,22 @@
                 attackCooldown: 0,
                 attackFrame: 0,
                 facing: 'left',
-                color: character.color,
-                accessories: [...character.accessories],
+                color: '#f44336',
+                accessories: [],
                 aiDecision: 0,
                 aiCooldown: 0,
                 alive: true,
                 slowed: false,
-                slowTimer: 0,
-                characterType: characterType,
-                damageMultiplier: 1.0,
-                attackRange: 60,
-                charge: 0,
-                maxCharge: 100,
-                specialCooldown: 0,
-                isUsingSpecial: false,
-                id: Math.random().toString(36).substr(2, 9)
+                slowTimer: 0
             };
-            
-            // Apply character stats
-            enemy.speed = character.stats.speed;
-            enemy.health = character.stats.health;
-            enemy.maxHealth = character.stats.health;
-            enemy.damageMultiplier = character.stats.damage;
-            enemy.attackRange = character.stats.range;
             
             // Apply difficulty modifiers
             if (difficulty === 'hard') {
-                enemy.health *= 1.5;
-                enemy.maxHealth *= 1.5;
-                enemy.speed *= 1.2;
-                enemy.damageMultiplier *= 1.3;
+                enemy.health = 150;
+                enemy.maxHealth = 150;
+                enemy.speed = 4.5;
+                enemy.damageMultiplier = 1.5;
+                enemy.attackRange = 70;
             }
             
             return enemy;
@@ -1138,435 +889,249 @@
             keys[e.key.toLowerCase()] = false;
         });
         
-        // WebSocket functions
-        function connectToServer() {
-            const status = document.getElementById('onlineStatus');
-            status.textContent = 'Connecting to server...';
-            status.className = 'online-status connecting';
+        // Drawing functions
+        function drawAccessory(character, accessory) {
+            const centerX = character.x + character.width/2;
+            const headY = character.y - 10;
             
-            // Connect to WebSocket server
-            socket = new WebSocket('ws://localhost:3000');
+            ctx.save();
+            ctx.strokeStyle = '#333';
+            ctx.fillStyle = '#333';
+            ctx.lineWidth = 2;
             
-            socket.onopen = () => {
-                status.textContent = 'Connected to server';
-                status.className = 'online-status connected';
-                document.getElementById('createRoomBtn').disabled = false;
-                document.getElementById('joinRoomBtn').disabled = false;
-            };
-            
-            socket.onmessage = (event) => {
-                const data = JSON.parse(event.data);
-                handleServerMessage(data);
-            };
-            
-            socket.onclose = () => {
-                status.textContent = 'Disconnected from server';
-                status.className = 'online-status disconnected';
-                document.getElementById('createRoomBtn').disabled = true;
-                document.getElementById('joinRoomBtn').disabled = true;
-            };
-            
-            socket.onerror = () => {
-                document.getElementById('connectionError').style.display = 'block';
-                status.textContent = 'Connection error';
-                status.className = 'online-status disconnected';
-            };
-        }
-        
-        function handleServerMessage(data) {
-            switch (data.type) {
-                case 'roomCreated':
-                    roomId = data.roomId;
-                    isHost = true;
-                    document.getElementById('roomCode').textContent = roomId;
-                    document.getElementById('roomInfo').style.display = 'block';
-                    document.getElementById('waitingMessage').style.display = 'block';
+            switch(accessory) {
+                case 'sunglasses':
+                    ctx.beginPath();
+                    ctx.moveTo(centerX - 12, headY - 2);
+                    ctx.lineTo(centerX + 12, headY - 2);
+                    ctx.stroke();
+                    ctx.beginPath();
+                    ctx.arc(centerX - 6, headY - 2, 5, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.beginPath();
+                    ctx.arc(centerX + 6, headY - 2, 5, 0, Math.PI * 2);
+                    ctx.fill();
                     break;
                     
-                case 'playerJoined':
-                    onlinePlayers[data.playerId] = {
-                        character: data.character,
-                        health: 100,
-                        maxHealth: 100
-                    };
-                    
-                    if (Object.keys(onlinePlayers).length === 2) {
-                        document.getElementById('waitingMessage').textContent = 'Player joined! Starting game...';
-                        setTimeout(() => {
-                            startOnlineGame();
-                        }, 2000);
-                    }
+                case 'cowboy_hat':
+                    ctx.beginPath();
+                    ctx.moveTo(centerX - 15, headY - 5);
+                    ctx.lineTo(centerX + 15, headY - 5);
+                    ctx.lineTo(centerX + 12, headY - 15);
+                    ctx.lineTo(centerX - 12, headY - 15);
+                    ctx.closePath();
+                    ctx.fill();
+                    ctx.beginPath();
+                    ctx.moveTo(centerX - 20, headY - 5);
+                    ctx.lineTo(centerX + 20, headY - 5);
+                    ctx.lineWidth = 3;
+                    ctx.stroke();
                     break;
                     
-                case 'gameState':
-                    // Update game state from server
-                    updateOnlineGameState(data);
+                case 'top_hat':
+                    ctx.beginPath();
+                    ctx.moveTo(centerX - 10, headY - 20);
+                    ctx.lineTo(centerX + 10, headY - 20);
+                    ctx.lineTo(centerX + 8, headY - 5);
+                    ctx.lineTo(centerX - 8, headY - 5);
+                    ctx.closePath();
+                    ctx.fill();
+                    ctx.beginPath();
+                    ctx.moveTo(centerX - 15, headY - 5);
+                    ctx.lineTo(centerX + 15, headY - 5);
+                    ctx.lineWidth = 3;
+                    ctx.stroke();
                     break;
                     
-                case 'playerLeft':
-                    delete onlinePlayers[data.playerId];
-                    if (gameRunning && Object.keys(onlinePlayers).length < 2) {
-                        endOnlineGame('Player disconnected');
-                    }
+                case 'headband':
+                    ctx.beginPath();
+                    ctx.moveTo(centerX - 12, headY - 8);
+                    ctx.lineTo(centerX + 12, headY - 8);
+                    ctx.lineWidth = 3;
+                    ctx.stroke();
+                    ctx.fillStyle = '#ff0000';
+                    ctx.fillRect(centerX - 2, headY - 12, 4, 4);
+                    break;
+                    
+                case 'antenna':
+                    ctx.beginPath();
+                    ctx.moveTo(centerX, headY - 10);
+                    ctx.lineTo(centerX, headY - 20);
+                    ctx.stroke();
+                    ctx.beginPath();
+                    ctx.arc(centerX, headY - 22, 3, 0, Math.PI * 2);
+                    ctx.fill();
                     break;
             }
-        }
-        
-        function updateOnlineGameState(data) {
-            // Update all players' positions and states
-            Object.keys(data.players).forEach(playerId => {
-                if (playerId !== player.id) {
-                    const playerData = data.players[playerId];
-                    const enemy = enemies.find(e => e.id === playerId);
-                    if (enemy) {
-                        enemy.x = playerData.x;
-                        enemy.y = playerData.y;
-                        enemy.velocityX = playerData.velocityX;
-                        enemy.velocityY = playerData.velocityY;
-                        enemy.facing = playerData.facing;
-                        enemy.isAttacking = playerData.isAttacking;
-                        enemy.attackType = playerData.attackType;
-                        enemy.health = playerData.health;
-                        enemy.charge = playerData.charge;
-                    }
-                }
-            });
-        }
-        
-        function createRoom() {
-            if (!socket || socket.readyState !== WebSocket.OPEN) return;
             
-            socket.send(JSON.stringify({
-                type: 'createRoom'
-            }));
+            ctx.restore();
         }
         
-        function showJoinRoom() {
-            const code = prompt('Enter room code:');
-            if (code && socket && socket.readyState === WebSocket.OPEN) {
-                socket.send(JSON.stringify({
-                    type: 'joinRoom',
-                    roomId: code.toUpperCase()
-                }));
+        function drawStickman(character, label) {
+            ctx.save();
+            
+            // Spawn effect
+            if ((character === player || character === player2) && isRespawning) {
+                ctx.globalAlpha = 0.5 + Math.sin(Date.now() * 0.01) * 0.5;
             }
-        }
-        
-        function copyRoomCode() {
-            const roomCode = document.getElementById('roomCode').textContent;
-            navigator.clipboard.writeText(roomCode).then(() => {
-                alert('Room code copied to clipboard!');
-            });
-        }
-        
-        function startOnlineGame() {
-            document.getElementById('onlineLobby').style.display = 'none';
             
-            gameMode = 'online';
-            gameRunning = true;
+            // Body
+            ctx.strokeStyle = character.color;
+            ctx.lineWidth = 4;
+            ctx.lineCap = 'round';
             
-            // Reset game state
-            particles = [];
-            enemies = [];
+            // Head
+            ctx.beginPath();
+            ctx.arc(character.x + character.width/2, character.y - 10, 10, 0, Math.PI * 2);
+            ctx.stroke();
             
-            // Setup UI for online mode
-            document.getElementById('waveInfo').style.display = 'none';
-            document.getElementById('cpuHealthContainer').style.display = 'flex';
-            document.getElementById('cpuName').textContent = 'Opponent';
-            
-            // Create player
-            player.id = socket._socket._id || 'player1';
-            player.x = 100;
-            player.y = groundY;
-            player.health = player.maxHealth;
-            player.charge = 0;
-            player.specialCooldown = 0;
-            
-            // Create enemies from other players
-            Object.keys(onlinePlayers).forEach(playerId => {
-                if (playerId !== player.id) {
-                    const enemy = createEnemy(600, 'normal', onlinePlayers[playerId].character);
-                    enemy.id = playerId;
-                    enemy.health = onlinePlayers[playerId].health;
-                    enemies.push(enemy);
-                }
-            });
-            
-            // Apply selected character stats to player
-            const character = characters.find(c => c.id === selectedCharacter.id);
-            player.color = character.color;
-            player.accessories = character.accessories;
-            player.speed = character.stats.speed;
-            player.maxHealth = character.stats.health;
-            player.damageMultiplier = character.stats.damage;
-            player.attackRange = character.stats.range;
-            
-            updateHealthBars();
-            gameLoop();
-        }
-        
-        function endOnlineGame(reason) {
-            gameRunning = false;
-            cancelAnimationFrame(animationId);
-            
-            const gameOverScreen = document.getElementById('gameOver');
-            document.getElementById('gameOverText').textContent = 'Game Over';
-            document.getElementById('gameOverMessage').textContent = reason;
-            gameOverScreen.style.display = 'block';
-            
-            // Reset online state
-            onlinePlayers = {};
-            roomId = null;
-            isHost = false;
-        }
-        
-        // Navigation functions
-        function showStartScreen() {
-            document.getElementById('startScreen').style.display = 'block';
-            document.getElementById('gameOver').style.display = 'none';
-            document.getElementById('storyScreen').style.display = 'none';
-            document.getElementById('characterSelection').style.display = 'none';
-            document.getElementById('modeSelection').style.display = 'none';
-            document.getElementById('difficultySelection').style.display = 'none';
-            document.getElementById('onlineLobby').style.display = 'none';
-            
-            // Close WebSocket connection
-            if (socket) {
-                socket.close();
-                socket = null;
+            // Draw accessories
+            if (character.accessories) {
+                character.accessories.forEach(accessory => {
+                    drawAccessory(character, accessory);
+                });
             }
-        }
-        
-        function showOnlineMode() {
-            document.getElementById('startScreen').style.display = 'none';
-            document.getElementById('onlineLobby').style.display = 'block';
-            document.getElementById('connectionError').style.display = 'none';
-            document.getElementById('roomInfo').style.display = 'none';
-            document.getElementById('waitingMessage').style.display = 'none';
-            document.getElementById('createRoomBtn').disabled = true;
-            document.getElementById('joinRoomBtn').disabled = true;
             
-            // Reset online state
-            onlinePlayers = {};
-            roomId = null;
-            isHost = false;
+            // Body
+            ctx.beginPath();
+            ctx.moveTo(character.x + character.width/2, character.y);
+            ctx.lineTo(character.x + character.width/2, character.y + 30);
+            ctx.stroke();
             
-            connectToServer();
-        }
-        
-        function showStoryMode() {
-            document.getElementById('startScreen').style.display = 'none';
-            document.getElementById('storyScreen').style.display = 'block';
-            currentStory = 0;
-            currentChapter = 0;
-            isQuickPlayMode = false;
-            isOnlineMode = false;
-            showStoryIntroduction();
-        }
-        
-        function showQuickPlay() {
-            isQuickPlayMode = true;
-            isOnlineMode = false;
-            showCharacterSelection();
-        }
-        
-        // Story mode functions
-        function showStoryIntroduction() {
-            const storyScreen = document.getElementById('storyScreen');
-            const storyTitle = document.getElementById('storyTitle');
-            const storyContent = document.getElementById('storyContent');
-            const storyButton = document.getElementById('storyButton');
+            // Arms
+            const armAngle = character.isAttacking ? 0.5 : 0.2;
+            const armOffset = Math.sin(Date.now() * 0.01) * 5;
             
-            storyTitle.textContent = "The Journey of a Warrior";
-            storyContent.innerHTML = `
-                <p>In a world where stickmen warriors battle for supremacy, you begin your journey as an unknown fighter with dreams of glory.</p>
-                <p>Legend speaks of six masters, each possessing unique fighting styles and devastating special attacks. To become the ultimate warrior, you must defeat them all and claim their powers as your own.</p>
-                <p>Are you ready to embark on this epic journey and write your name in the annals of stickman history?</p>
-                <div class="progress-bar">
-                    <div class="progress-fill" style="width: ${(unlockedCharacters.length / characters.length) * 100}%"></div>
-                </div>
-                <p style="margin-top: 10px; font-size: 14px;">Progress: ${unlockedCharacters.length}/${characters.length} characters unlocked</p>
-            `;
-            storyButton.textContent = "Begin Journey";
-            storyButton.onclick = showChapterSelect;
-        }
-        
-        function showChapterSelect() {
-            const storyScreen = document.getElementById('storyScreen');
-            const storyTitle = document.getElementById('storyTitle');
-            const storyContent = document.getElementById('storyContent');
-            const storyButton = document.getElementById('storyButton');
+            // Back arm (always normal)
+            const backArmX = character.x + character.width/2 + (character.facing === 'right' ? -15 : 15);
+            const backArmY = character.y + 20 - armOffset;
+            ctx.beginPath();
+            ctx.moveTo(character.x + character.width/2, character.y + 10);
+            ctx.lineTo(backArmX, backArmY);
+            ctx.stroke();
             
-            storyTitle.textContent = "Select Your Chapter";
-            
-            let chaptersHTML = '<div class="chapter-select">';
-            storyChapters.forEach((chapter, index) => {
-                const isCompleted = storyProgress[chapter.enemy] || false;
-                const isUnlocked = index === 0 || storyProgress[storyChapters[index - 1].enemy];
+            // Front arm (changes during punch)
+            if (character.isAttacking && character.attackType === 'punch') {
+                // Punching animation - extend arm forward
+                const punchExtension = 20 + Math.sin(character.attackFrame * 0.5) * 5;
+                const punchX = character.x + character.width/2 + (character.facing === 'right' ? punchExtension : -punchExtension);
+                const punchY = character.y + 10;
                 
-                chaptersHTML += `
-                    <div class="chapter-card ${isCompleted ? 'completed' : ''} ${!isUnlocked ? 'locked' : ''}" 
-                         onclick="${isUnlocked ? `startStoryChapter(${index})` : ''}" 
-                         style="position: relative;">
-                        <div class="chapter-title">${chapter.title}</div>
-                        <div class="chapter-enemy">vs ${chapter.enemyName}</div>
-                        ${isCompleted ? '<div style="color: #44ff44; font-size: 12px; margin-top: 5px;">✓ Completed</div>' : ''}
-                    </div>
-                `;
+                ctx.beginPath();
+                ctx.moveTo(character.x + character.width/2, character.y + 10);
+                ctx.lineTo(punchX, punchY);
+                ctx.stroke();
+                
+                // Fist
+                ctx.fillStyle = character.color;
+                ctx.beginPath();
+                ctx.arc(punchX, punchY, 5, 0, Math.PI * 2);
+                ctx.fill();
+            } else {
+                // Normal arm
+                const frontArmX = character.x + character.width/2 + (character.facing === 'right' ? 15 : -15);
+                const frontArmY = character.y + 20 + armOffset;
+                ctx.beginPath();
+                ctx.moveTo(character.x + character.width/2, character.y + 10);
+                ctx.lineTo(frontArmX, frontArmY);
+                ctx.stroke();
+            }
+            
+            // Legs
+            const legOffset = Math.sin(Date.now() * 0.02) * 5;
+            
+            // Back leg (always normal)
+            const backLegX = character.x + character.width/2 - 10;
+            const backLegY = character.y + character.height + legOffset;
+            ctx.beginPath();
+            ctx.moveTo(character.x + character.width/2, character.y + 30);
+            ctx.lineTo(backLegX, backLegY);
+            ctx.stroke();
+            
+            // Front leg (changes during kick)
+            if (character.isAttacking && character.attackType === 'kick') {
+                // Kicking animation - extend leg forward
+                const kickExtension = 25 + Math.sin(character.attackFrame * 0.4) * 8;
+                const kickX = character.x + character.width/2 + (character.facing === 'right' ? kickExtension : -kickExtension);
+                const kickY = character.y + 30;
+                
+                ctx.beginPath();
+                ctx.moveTo(character.x + character.width/2, character.y + 30);
+                ctx.lineTo(kickX, kickY);
+                ctx.stroke();
+                
+                // Foot
+                ctx.fillStyle = character.color;
+                ctx.beginPath();
+                ctx.arc(kickX, kickY, 6, 0, Math.PI * 2);
+                ctx.fill();
+            } else {
+                // Normal leg
+                const frontLegX = character.x + character.width/2 + 10;
+                const frontLegY = character.y + character.height - legOffset;
+                ctx.beginPath();
+                ctx.moveTo(character.x + character.width/2, character.y + 30);
+                ctx.lineTo(frontLegX, frontLegY);
+                ctx.stroke();
+            }
+            
+            ctx.restore();
+        }
+        
+        function drawEnemyHealthBar(enemy) {
+            if (!enemy.alive) return;
+            
+            const barWidth = 100; // Half the size of normal health bars
+            const barHeight = 12;
+            const x = enemy.x + enemy.width/2 - barWidth/2;
+            const y = enemy.y - 30;
+            
+            // Background
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
+            ctx.fillRect(x, y, barWidth, barHeight);
+            
+            // Border
+            ctx.strokeStyle = '#333';
+            ctx.lineWidth = 1;
+            ctx.strokeRect(x, y, barWidth, barHeight);
+            
+            // Health fill
+            const healthPercent = enemy.health / enemy.maxHealth;
+            ctx.fillStyle = healthPercent > 0.5 ? '#44ff44' : healthPercent > 0.25 ? '#ffaa00' : '#ff4444';
+            ctx.fillRect(x + 1, y + 1, (barWidth - 2) * healthPercent, barHeight - 2);
+        }
+        
+        function drawParticles() {
+            particles.forEach((particle, index) => {
+                ctx.save();
+                ctx.globalAlpha = particle.life;
+                ctx.fillStyle = particle.color;
+                ctx.beginPath();
+                ctx.arc(particle.x, particle.y, particle.size, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.restore();
+                
+                // Update particle
+                particle.x += particle.velocityX;
+                particle.y += particle.velocityY;
+                particle.life -= particle.decay;
+                particle.velocityY += 0.2; // gravity
+                
+                if (particle.life <= 0) {
+                    particles.splice(index, 1);
+                }
             });
-            chaptersHTML += '</div>';
-            
-            storyContent.innerHTML = chaptersHTML;
-            storyButton.textContent = "Back";
-            storyButton.onclick = showStoryIntroduction;
         }
         
-        function startStoryChapter(chapterIndex) {
-            currentChapter = chapterIndex;
-            const chapter = storyChapters[chapterIndex];
-            currentStory = 0;
-            
-            const storyScreen = document.getElementById('storyScreen');
-            const storyTitle = document.getElementById('storyTitle');
-            const storyContent = document.getElementById('storyContent');
-            const storyButton = document.getElementById('storyButton');
-            
-            storyTitle.textContent = chapter.title;
-            showStoryChapter();
-        }
-        
-        function showStoryChapter() {
-            const chapter = storyChapters[currentChapter];
-            const storyPart = chapter.story[currentStory];
-            
-            const storyScreen = document.getElementById('storyScreen');
-            const storyTitle = document.getElementById('storyTitle');
-            const storyContent = document.getElementById('storyContent');
-            const storyButton = document.getElementById('storyButton');
-            
-            storyTitle.textContent = storyPart.title;
-            storyContent.innerHTML = `<p>${storyPart.text}</p>`;
-            
-            if (currentStory < chapter.story.length - 1) {
-                storyButton.textContent = "Continue";
-                storyButton.onclick = () => {
-                    currentStory++;
-                    showStoryChapter();
-                };
-            } else {
-                storyButton.textContent = "Begin Battle";
-                storyButton.onclick = () => {
-                    document.getElementById('storyScreen').style.display = 'none';
-                    startStoryBattle();
-                };
+        function createDeathEffect(x, y) {
+            for (let i = 0; i < 20; i++) {
+                particles.push(createParticle(x, y, 'death'));
             }
         }
         
-        function nextStory() {
-            currentStory++;
-            if (currentStory < storyChapters[currentChapter].story.length) {
-                showStoryChapter();
-            } else {
-                startStoryBattle();
-            }
-        }
-        
-        function startStoryBattle() {
-            const chapter = storyChapters[currentChapter];
-            selectedCharacter = characters.find(c => c.id === unlockedCharacters[unlockedCharacters.length - 1]);
-            
-            gameMode = 'story';
-            gameDifficulty = 'normal';
-            gameRunning = true;
-            
-            // Reset game state
-            playerLives = 3;
-            currentWave = 1;
-            particles = [];
-            
-            // Setup UI for story mode
-            document.getElementById('waveInfo').style.display = 'none';
-            document.getElementById('cpuHealthContainer').style.display = 'flex';
-            document.getElementById('cpuName').textContent = chapter.enemyName;
-            
-            // Create enemy
-            enemies = [createEnemy(600, 'normal', chapter.enemy)];
-            
-            // Apply selected character stats to player
-            player.color = selectedCharacter.color;
-            player.accessories = selectedCharacter.accessories;
-            player.speed = selectedCharacter.stats.speed;
-            player.health = selectedCharacter.stats.health;
-            player.maxHealth = selectedCharacter.stats.health;
-            player.damageMultiplier = selectedCharacter.stats.damage;
-            player.attackRange = selectedCharacter.stats.range;
-            player.charge = 0;
-            player.specialCooldown = 0;
-            
-            // Reset player position
-            player.x = 100;
-            player.y = groundY;
-            player.velocityX = 0;
-            player.velocityY = 0;
-            player.isAttacking = false;
-            player.attackType = null;
-            player.attackCooldown = 0;
-            player.attackFrame = 0;
-            isRespawning = false;
-            
-            updateHealthBars();
-            gameLoop();
-        }
-        
-        function completeStoryChapter() {
-            const chapter = storyChapters[currentChapter];
-            const enemyId = chapter.enemy;
-            
-            // Mark chapter as completed
-            storyProgress[enemyId] = true;
-            
-            // Unlock the character
-            if (!unlockedCharacters.includes(enemyId)) {
-                unlockedCharacters.push(enemyId);
-            }
-            
-            // Show victory screen
-            const storyScreen = document.getElementById('storyScreen');
-            const storyTitle = document.getElementById('storyTitle');
-            const storyContent = document.getElementById('storyContent');
-            const storyButton = document.getElementById('storyButton');
-            
-            storyScreen.style.display = 'block';
-            storyTitle.textContent = "Victory!";
-            
-            const character = characters.find(c => c.id === enemyId);
-            storyContent.innerHTML = `
-                <p style="color: #44ff44; font-size: 18px; margin-bottom: 15px;">You have defeated ${chapter.enemyName}!</p>
-                <p>${character.name} has been unlocked and their fighting style is now yours to master.</p>
-                <p style="margin-top: 15px;"><strong>New Special Attack Unlocked:</strong> ${character.specialDescription}</p>
-                <div class="progress-bar">
-                    <div class="progress-fill" style="width: ${(unlockedCharacters.length / characters.length) * 100}%"></div>
-                </div>
-                <p style="margin-top: 10px; font-size: 14px;">Progress: ${unlockedCharacters.length}/${characters.length} characters unlocked</p>
-            `;
-            
-            if (currentChapter < storyChapters.length - 1) {
-                storyButton.textContent = "Next Chapter";
-                storyButton.onclick = () => {
-                    currentChapter++;
-                    startStoryChapter(currentChapter);
-                };
-            } else {
-                storyButton.textContent = "Complete Journey";
-                storyButton.onclick = () => {
-                    storyTitle.textContent = "Congratulations!";
-                    storyContent.innerHTML = `
-                        <p style="color: #ffaa00; font-size: 24px; margin-bottom: 20px;">You have become the ultimate stickman fighter!</p>
-                        <p>You have defeated all six masters and mastered their fighting styles. Your name will be remembered throughout history as the greatest warrior who ever lived.</p>
-                        <p style="margin-top: 15px;">All characters and special attacks are now unlocked in Quick Play mode.</p>
-                    `;
-                    storyButton.textContent = "Return to Menu";
-                    storyButton.onclick = showStartScreen;
-                };
+        function createSpawnEffect(x, y) {
+            for (let i = 0; i < 15; i++) {
+                particles.push(createParticle(x, y, 'spawn'));
             }
         }
         
@@ -1576,31 +1141,13 @@
             document.getElementById('gameOver').style.display = 'none';
             document.getElementById('characterSelection').style.display = 'block';
             
-            // Update title and instruction based on mode
-            const title = document.getElementById('characterSelectionTitle');
-            const instruction = document.getElementById('selectionInstruction');
-            
-            if (isQuickPlayMode) {
-                title.textContent = "Select Your Fighter";
-                instruction.textContent = "All characters are available in Quick Play!";
-            } else if (isOnlineMode) {
-                title.textContent = "Select Your Fighter";
-                instruction.textContent = "Choose your character for online battle";
-            } else {
-                title.textContent = "Select Your Fighter";
-                instruction.textContent = "Click on a character to select them";
-            }
-            
             const grid = document.getElementById('charactersGrid');
             grid.innerHTML = '';
             
             characters.forEach(char => {
-                const isUnlocked = isQuickPlayMode || isOnlineMode || unlockedCharacters.includes(char.id);
                 const card = document.createElement('div');
-                card.className = `character-card ${!isUnlocked ? 'locked' : ''}`;
-                if (isUnlocked) {
-                    card.onclick = () => selectCharacter(char);
-                }
+                card.className = 'character-card';
+                card.onclick = () => selectCharacter(char);
                 
                 const preview = document.createElement('div');
                 preview.className = 'character-preview';
@@ -1796,6 +1343,103 @@
             document.getElementById('difficultySelection').style.display = 'block';
         }
         
+        function enterOnlineMode() {
+            document.getElementById('modeSelection').style.display = 'none';
+            document.getElementById('onlineLobby').style.display = 'block';
+            connectToServer();
+        }
+        
+        function cancelOnlineMode() {
+            if (socket) {
+                socket.disconnect();
+                socket = null;
+            }
+            document.getElementById('onlineLobby').style.display = 'none';
+            document.getElementById('modeSelection').style.display = 'block';
+            updateConnectionStatus(false);
+        }
+        
+        function connectToServer() {
+            socket = io('http://localhost:3000');
+            
+            socket.on('connect', () => {
+                updateConnectionStatus(true);
+                document.getElementById('lobbyStatus').textContent = 'Connected! Finding match...';
+                socket.emit('findMatch');
+            });
+            
+            socket.on('disconnect', () => {
+                updateConnectionStatus(false);
+            });
+            
+            socket.on('matchFound', (data) => {
+                roomId = data.roomId;
+                isPlayer1 = data.isPlayer1;
+                document.getElementById('lobbyStatus').textContent = 'Match found! Starting game...';
+                
+                setTimeout(() => {
+                    document.getElementById('onlineLobby').style.display = 'none';
+                    startOnlineGame();
+                }, 1000);
+            });
+            
+            socket.on('playerJoined', (data) => {
+                if (data.playerId !== socket.id) {
+                    player2Data = data;
+                }
+            });
+            
+            socket.on('gameState', (data) => {
+                if (data.playerId !== socket.id) {
+                    // Update opponent state
+                    if (isPlayer1) {
+                        player2.x = data.x;
+                        player2.y = data.y;
+                        player2.velocityX = data.velocityX;
+                        player2.velocityY = data.velocityY;
+                        player2.facing = data.facing;
+                        player2.isAttacking = data.isAttacking;
+                        player2.attackType = data.attackType;
+                        player2.health = data.health;
+                        player2.isUsingSpecial = data.isUsingSpecial;
+                    } else {
+                        player.x = data.x;
+                        player.y = data.y;
+                        player.velocityX = data.velocityX;
+                        player.velocityY = data.velocityY;
+                        player.facing = data.facing;
+                        player.isAttacking = data.isAttacking;
+                        player.attackType = data.attackType;
+                        player.health = data.health;
+                        player.isUsingSpecial = data.isUsingSpecial;
+                    }
+                }
+            });
+            
+            socket.on('specialAttack', (data) => {
+                if (data.playerId !== socket.id) {
+                    // Execute opponent's special attack
+                    const opponent = isPlayer1 ? player2 : player;
+                    executeSpecialAttack(data.attackType, opponent);
+                }
+            });
+            
+            socket.on('playerDisconnected', () => {
+                endGame('Player Disconnected', 'Your opponent left the game');
+            });
+        }
+        
+        function updateConnectionStatus(connected) {
+            const status = document.getElementById('connectionStatus');
+            if (connected) {
+                status.textContent = 'Connected';
+                status.className = 'connection-status connected';
+            } else {
+                status.textContent = 'Disconnected';
+                status.className = 'connection-status disconnected';
+            }
+        }
+        
         // Special attack functions
         function useSpecialAttack() {
             if (player.charge < player.maxCharge || player.specialCooldown > 0) return;
@@ -1803,6 +1447,14 @@
             player.isUsingSpecial = true;
             player.charge = 0;
             player.specialCooldown = 180; // 3 seconds at 60fps
+            
+            // Send to server if online
+            if (isOnlineMode && socket) {
+                socket.emit('specialAttack', {
+                    roomId: roomId,
+                    attackType: selectedCharacter.specialAttack
+                });
+            }
             
             switch(selectedCharacter.specialAttack) {
                 case 'groundSlam':
@@ -1830,6 +1482,29 @@
             }, 500);
         }
         
+        function executeSpecialAttack(attackType, target) {
+            switch(attackType) {
+                case 'groundSlam':
+                    executeGroundSlam(target);
+                    break;
+                case 'shadowDash':
+                    executeShadowDash(target);
+                    break;
+                case 'multiShot':
+                    executeMultiShot(target);
+                    break;
+                case 'timeField':
+                    executeTimeField(target);
+                    break;
+                case 'uppercut':
+                    executeUppercut(target);
+                    break;
+                case 'laserBeam':
+                    executeLaserBeam(target);
+                    break;
+            }
+        }
+        
         function groundSlam() {
             // Create shockwave effect
             for (let i = 0; i < 30; i++) {
@@ -1837,19 +1512,43 @@
             }
             
             // Damage all enemies in range
-            enemies.forEach(enemy => {
-                if (enemy.alive) {
-                    const distance = Math.abs(enemy.x - player.x);
+            const targets = isOnlineMode ? [player2] : enemies;
+            targets.forEach(target => {
+                if (target.alive !== false) {
+                    const distance = Math.abs(target.x - player.x);
                     if (distance < 150) {
-                        enemy.health -= 40;
-                        enemy.velocityY = -15; // Launch enemies
-                        if (enemy.health <= 0) {
-                            enemy.alive = false;
-                            createDeathEffect(enemy.x + enemy.width/2, enemy.y + enemy.height/2);
+                        target.health -= 40;
+                        target.velocityY = -15; // Launch enemies
+                        if (target.health <= 0) {
+                            if (isOnlineMode) {
+                                target.alive = false;
+                                createDeathEffect(target.x + target.width/2, target.y + target.height/2);
+                                endGame('You Win!', 'Congratulations! You defeated your opponent!');
+                            } else {
+                                target.alive = false;
+                                createDeathEffect(target.x + target.width/2, target.y + target.height/2);
+                            }
                         }
                     }
                 }
             });
+        }
+        
+        function executeGroundSlam(target) {
+            // Create shockwave effect
+            for (let i = 0; i < 30; i++) {
+                particles.push(createParticle(target.x + target.width/2, target.y + target.height, 'death'));
+            }
+            
+            // Damage player
+            const distance = Math.abs(player.x - target.x);
+            if (distance < 150) {
+                player.health -= 40;
+                player.velocityY = -15;
+                if (player.health <= 0) {
+                    endGame('You Lose!', 'Your opponent defeated you!');
+                }
+            }
         }
         
         function shadowDash() {
@@ -1872,17 +1571,49 @@
             if (player.x < 0) player.x = 0;
             if (player.x + player.width > canvas.width) player.x = canvas.width - player.width;
             
-            enemies.forEach(enemy => {
-                if (enemy.alive && 
-                    ((player.facing === 'right' && enemy.x > startX && enemy.x < endX) ||
-                     (player.facing === 'left' && enemy.x < startX && enemy.x > endX))) {
-                    enemy.health -= 30;
-                    if (enemy.health <= 0) {
-                        enemy.alive = false;
-                        createDeathEffect(enemy.x + enemy.width/2, enemy.y + enemy.height/2);
+            const targets = isOnlineMode ? [player2] : enemies;
+            targets.forEach(target => {
+                if (target.alive !== false && 
+                    ((player.facing === 'right' && target.x > startX && target.x < endX) ||
+                     (player.facing === 'left' && target.x < startX && target.x > endX))) {
+                    target.health -= 30;
+                    if (target.health <= 0) {
+                        if (isOnlineMode) {
+                            target.alive = false;
+                            createDeathEffect(target.x + target.width/2, target.y + target.height/2);
+                            endGame('You Win!', 'Congratulations! You defeated your opponent!');
+                        } else {
+                            target.alive = false;
+                            createDeathEffect(target.x + target.width/2, target.y + target.height/2);
+                        }
                     }
                 }
             });
+        }
+        
+        function executeShadowDash(target) {
+            const dashDistance = target.facing === 'right' ? 200 : -200;
+            const startX = target.x;
+            const endX = target.x + dashDistance;
+            
+            // Create shadow trail
+            for (let i = 0; i < 10; i++) {
+                setTimeout(() => {
+                    const trailX = startX + (dashDistance * i / 10);
+                    for (let j = 0; j < 5; j++) {
+                        particles.push(createParticle(trailX + target.width/2, target.y + target.height/2, 'spawn'));
+                    }
+                }, i * 20);
+            }
+            
+            // Damage player if in path
+            if ((target.facing === 'right' && player.x > startX && player.x < endX) ||
+                (target.facing === 'left' && player.x < startX && player.x > endX)) {
+                player.health -= 30;
+                if (player.health <= 0) {
+                    endGame('You Lose!', 'Your opponent defeated you!');
+                }
+            }
         }
         
         function multiShot() {
@@ -1915,23 +1646,82 @@
                     ctx.fill();
                     ctx.restore();
                     
-                    // Check collision with enemies
-                    enemies.forEach(enemy => {
-                        if (enemy.alive) {
+                    // Check collision with targets
+                    const targets = isOnlineMode ? [player2] : enemies;
+                    targets.forEach(target => {
+                        if (target.alive !== false) {
                             const distance = Math.sqrt(
-                                Math.pow(enemy.x + enemy.width/2 - projectile.x, 2) + 
-                                Math.pow(enemy.y + enemy.height/2 - projectile.y, 2)
+                                Math.pow(target.x + target.width/2 - projectile.x, 2) + 
+                                Math.pow(target.y + target.height/2 - projectile.y, 2)
                             );
                             if (distance < 20) {
-                                enemy.health -= projectile.damage;
-                                if (enemy.health <= 0) {
-                                    enemy.alive = false;
-                                    createDeathEffect(enemy.x + enemy.width/2, enemy.y + enemy.height/2);
+                                target.health -= projectile.damage;
+                                if (target.health <= 0) {
+                                    if (isOnlineMode) {
+                                        target.alive = false;
+                                        createDeathEffect(target.x + target.width/2, target.y + target.height/2);
+                                        endGame('You Win!', 'Congratulations! You defeated your opponent!');
+                                    } else {
+                                        target.alive = false;
+                                        createDeathEffect(target.x + target.width/2, target.y + target.height/2);
+                                    }
                                 }
                                 projectile.life = 0;
                             }
                         }
                     });
+                    
+                    if (projectile.life > 0) {
+                        requestAnimationFrame(animateProjectile);
+                    }
+                };
+                
+                setTimeout(() => animateProjectile(), angle * 10);
+            });
+        }
+        
+        function executeMultiShot(target) {
+            const angles = [0, 45, 90, 135, 180, 225, 270, 315];
+            
+            angles.forEach(angle => {
+                const rad = angle * Math.PI / 180;
+                const projectile = {
+                    x: target.x + target.width/2,
+                    y: target.y + 20,
+                    velocityX: Math.cos(rad) * 8,
+                    velocityY: Math.sin(rad) * 8,
+                    life: 60,
+                    damage: 25
+                };
+                
+                // Animate projectile
+                const animateProjectile = () => {
+                    if (projectile.life <= 0) return;
+                    
+                    projectile.x += projectile.velocityX;
+                    projectile.y += projectile.velocityY;
+                    projectile.life--;
+                    
+                    // Draw projectile
+                    ctx.save();
+                    ctx.fillStyle = '#ffaa00';
+                    ctx.beginPath();
+                    ctx.arc(projectile.x, projectile.y, 5, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.restore();
+                    
+                    // Check collision with player
+                    const distance = Math.sqrt(
+                        Math.pow(player.x + player.width/2 - projectile.x, 2) + 
+                        Math.pow(player.y + player.height/2 - projectile.y, 2)
+                    );
+                    if (distance < 20) {
+                        player.health -= projectile.damage;
+                        if (player.health <= 0) {
+                            endGame('You Lose!', 'Your opponent defeated you!');
+                        }
+                        projectile.life = 0;
+                    }
                     
                     if (projectile.life > 0) {
                         requestAnimationFrame(animateProjectile);
@@ -1952,13 +1742,29 @@
             }
             
             // Slow all enemies
-            enemies.forEach(enemy => {
-                if (enemy.alive) {
-                    enemy.slowed = true;
-                    enemy.slowTimer = 300; // 5 seconds
-                    enemy.speed *= 0.3;
+            const targets = isOnlineMode ? [player2] : enemies;
+            targets.forEach(target => {
+                if (target.alive !== false) {
+                    target.slowed = true;
+                    target.slowTimer = 300; // 5 seconds
+                    target.speed *= 0.3;
                 }
             });
+        }
+        
+        function executeTimeField(target) {
+            // Create time field effect
+            for (let i = 0; i < 20; i++) {
+                const angle = (i / 20) * Math.PI * 2;
+                const x = target.x + target.width/2 + Math.cos(angle) * 100;
+                const y = target.y + target.height/2 + Math.sin(angle) * 100;
+                particles.push(createParticle(x, y, 'spawn'));
+            }
+            
+            // Slow player
+            player.slowed = true;
+            player.slowTimer = 300;
+            player.speed *= 0.3;
         }
         
         function uppercut() {
@@ -1968,20 +1774,45 @@
             }
             
             // Damage and launch nearby enemies
-            enemies.forEach(enemy => {
-                if (enemy.alive) {
-                    const distance = Math.abs(enemy.x - player.x);
+            const targets = isOnlineMode ? [player2] : enemies;
+            targets.forEach(target => {
+                if (target.alive !== false) {
+                    const distance = Math.abs(target.x - player.x);
                     if (distance < 80) {
-                        enemy.health -= 35;
-                        enemy.velocityY = -20; // Strong launch
-                        enemy.velocityX = (enemy.x < player.x ? -10 : 10);
-                        if (enemy.health <= 0) {
-                            enemy.alive = false;
-                            createDeathEffect(enemy.x + enemy.width/2, enemy.y + enemy.height/2);
+                        target.health -= 35;
+                        target.velocityY = -20; // Strong launch
+                        target.velocityX = (target.x < player.x ? -10 : 10);
+                        if (target.health <= 0) {
+                            if (isOnlineMode) {
+                                target.alive = false;
+                                createDeathEffect(target.x + target.width/2, target.y + target.height/2);
+                                endGame('You Win!', 'Congratulations! You defeated your opponent!');
+                            } else {
+                                target.alive = false;
+                                createDeathEffect(target.x + target.width/2, target.y + target.height/2);
+                            }
                         }
                     }
                 }
             });
+        }
+        
+        function executeUppercut(target) {
+            // Create upward effect
+            for (let i = 0; i < 15; i++) {
+                particles.push(createParticle(target.x + target.width/2, target.y, 'spawn'));
+            }
+            
+            // Damage and launch player
+            const distance = Math.abs(player.x - target.x);
+            if (distance < 80) {
+                player.health -= 35;
+                player.velocityY = -20;
+                player.velocityX = (player.x < target.x ? -10 : 10);
+                if (player.health <= 0) {
+                    endGame('You Lose!', 'Your opponent defeated you!');
+                }
+            }
         }
         
         function laserBeam() {
@@ -2013,21 +1844,74 @@
                     particles.push(createParticle(x, y, 'death'));
                 }
                 
-                // Check collision with enemies
-                enemies.forEach(enemy => {
-                    if (enemy.alive) {
-                        const enemyCenterX = enemy.x + enemy.width/2;
-                        const enemyCenterY = enemy.y + enemy.height/2;
-                        if (enemyCenterX >= startX && enemyCenterX <= startX + (endX - startX) * sweepProgress &&
-                            enemyCenterY >= player.y + 20 && enemyCenterY <= player.y + 20 + beamWidth) {
-                            enemy.health -= 2; // Continuous damage
-                            if (enemy.health <= 0) {
-                                enemy.alive = false;
-                                createDeathEffect(enemy.x + enemy.width/2, enemy.y + enemy.height/2);
+                // Check collision with targets
+                const targets = isOnlineMode ? [player2] : enemies;
+                targets.forEach(target => {
+                    if (target.alive !== false) {
+                        const targetCenterX = target.x + target.width/2;
+                        const targetCenterY = target.y + target.height/2;
+                        if (targetCenterX >= startX && targetCenterX <= startX + (endX - startX) * sweepProgress &&
+                            targetCenterY >= player.y + 20 && targetCenterY <= player.y + 20 + beamWidth) {
+                            target.health -= 2; // Continuous damage
+                            if (target.health <= 0) {
+                                if (isOnlineMode) {
+                                    target.alive = false;
+                                    createDeathEffect(target.x + target.width/2, target.y + target.height/2);
+                                    endGame('You Win!', 'Congratulations! You defeated your opponent!');
+                                } else {
+                                    target.alive = false;
+                                    createDeathEffect(target.x + target.width/2, target.y + target.height/2);
+                                }
                             }
                         }
                     }
                 });
+                
+                requestAnimationFrame(animateLaser);
+            };
+            
+            animateLaser();
+        }
+        
+        function executeLaserBeam(target) {
+            const beamWidth = 20;
+            const beamLength = canvas.width;
+            const startX = target.facing === 'right' ? target.x + target.width : target.x;
+            const endX = target.facing === 'right' ? canvas.width : 0;
+            
+            // Animate laser sweep
+            let sweepProgress = 0;
+            const sweepSpeed = 0.05;
+            
+            const animateLaser = () => {
+                if (sweepProgress >= 1) return;
+                
+                sweepProgress += sweepSpeed;
+                
+                // Draw laser
+                ctx.save();
+                ctx.globalAlpha = 0.8;
+                ctx.fillStyle = '#ff0000';
+                ctx.fillRect(startX, target.y + 20, (endX - startX) * sweepProgress, beamWidth);
+                ctx.restore();
+                
+                // Create laser particles
+                for (let i = 0; i < 3; i++) {
+                    const x = startX + (endX - startX) * sweepProgress;
+                    const y = target.y + 20 + Math.random() * beamWidth;
+                    particles.push(createParticle(x, y, 'death'));
+                }
+                
+                // Check collision with player
+                const playerCenterX = player.x + player.width/2;
+                const playerCenterY = player.y + player.height/2;
+                if (playerCenterX >= startX && playerCenterX <= startX + (endX - startX) * sweepProgress &&
+                    playerCenterY >= target.y + 20 && playerCenterY <= target.y + 20 + beamWidth) {
+                    player.health -= 2; // Continuous damage
+                    if (player.health <= 0) {
+                        endGame('You Lose!', 'Your opponent defeated you!');
+                    }
+                }
                 
                 requestAnimationFrame(animateLaser);
             };
@@ -2071,10 +1955,11 @@
                     if (player.charge < player.maxCharge) {
                         player.charge += 15;
                     }
-                    // Check collision with all enemies
-                    enemies.forEach(enemy => {
-                        if (enemy.alive) {
-                            checkAttackCollision(player, enemy, 15 * player.damageMultiplier);
+                    // Check collision with all targets
+                    const targets = isOnlineMode ? [player2] : enemies;
+                    targets.forEach(target => {
+                        if (target.alive !== false) {
+                            checkAttackCollision(player, target, 15 * player.damageMultiplier);
                         }
                     });
                 } else if (keys['f']) {
@@ -2086,10 +1971,11 @@
                     if (player.charge < player.maxCharge) {
                         player.charge += 23;
                     }
-                    // Check collision with all enemies
-                    enemies.forEach(enemy => {
-                        if (enemy.alive) {
-                            checkAttackCollision(player, enemy, 20 * player.damageMultiplier);
+                    // Check collision with all targets
+                    const targets = isOnlineMode ? [player2] : enemies;
+                    targets.forEach(target => {
+                        if (target.alive !== false) {
+                            checkAttackCollision(player, target, 20 * player.damageMultiplier);
                         }
                     });
                 }
@@ -2119,6 +2005,22 @@
                 player.y = groundY;
                 player.velocityY = 0;
             }
+            
+            // Send game state to server if online
+            if (isOnlineMode && socket) {
+                socket.emit('gameState', {
+                    roomId: roomId,
+                    x: player.x,
+                    y: player.y,
+                    velocityX: player.velocityX,
+                    velocityY: player.velocityY,
+                    facing: player.facing,
+                    isAttacking: player.isAttacking,
+                    attackType: player.attackType,
+                    health: player.health,
+                    isUsingSpecial: player.isUsingSpecial
+                });
+            }
         }
         
         function updateEnemy(enemy) {
@@ -2129,79 +2031,67 @@
                 enemy.slowTimer--;
                 if (enemy.slowTimer <= 0) {
                     enemy.slowed = false;
-                    // Reset speed based on character
-                    const character = characters.find(c => c.id === enemy.characterType);
-                    enemy.speed = character.stats.speed;
+                    // Reset speed based on difficulty
+                    if (gameMode === 'classic' && gameDifficulty === 'hard') {
+                        enemy.speed = 4.5;
+                    } else {
+                        enemy.speed = 3;
+                    }
                 }
             }
             
-            // AI Decision Making (only for non-online modes)
-            if (gameMode !== 'online') {
-                if (enemy.aiCooldown <= 0) {
-                    const distance = Math.abs(player.x - enemy.x);
-                    enemy.aiDecision = Math.random();
-                    
-                    if (distance > 150) {
-                        // Move towards player
-                        if (player.x < enemy.x) {
-                            enemy.velocityX = -enemy.speed;
-                            enemy.facing = 'left';
-                        } else {
-                            enemy.velocityX = enemy.speed;
-                            enemy.facing = 'right';
-                        }
-                    } else if (distance < 80) {
-                        // Move away if too close
-                        if (player.x < enemy.x) {
-                            enemy.velocityX = enemy.speed;
-                            enemy.facing = 'right';
-                        } else {
-                            enemy.velocityX = -enemy.speed;
-                            enemy.facing = 'left';
-                        }
+            // AI Decision Making
+            if (enemy.aiCooldown <= 0) {
+                const distance = Math.abs(player.x - enemy.x);
+                enemy.aiDecision = Math.random();
+                
+                if (distance > 150) {
+                    // Move towards player
+                    if (player.x < enemy.x) {
+                        enemy.velocityX = -enemy.speed;
+                        enemy.facing = 'left';
                     } else {
-                        enemy.velocityX *= 0.8;
+                        enemy.velocityX = enemy.speed;
+                        enemy.facing = 'right';
                     }
-                    
-                    // Special attack AI for story mode
-                    if (gameMode === 'story' && enemy.charge >= enemy.maxCharge && enemy.specialCooldown <= 0) {
-                        useEnemySpecialAttack(enemy);
+                } else if (distance < 80) {
+                    // Move away if too close
+                    if (player.x < enemy.x) {
+                        enemy.velocityX = enemy.speed;
+                        enemy.facing = 'right';
+                    } else {
+                        enemy.velocityX = -enemy.speed;
+                        enemy.facing = 'left';
                     }
-                    
-                    // Attack decision
-                    if (distance < 100 && enemy.attackCooldown <= 0) {
-                        if (enemy.aiDecision < 0.6) {
-                            enemy.isAttacking = true;
-                            enemy.attackType = 'punch';
-                            enemy.attackCooldown = 35;
-                            enemy.attackFrame = 0;
-                            checkAttackCollision(enemy, player, 15 * (enemy.damageMultiplier || 1));
-                            // Add charge for enemy
-                            if (enemy.charge < enemy.maxCharge) {
-                                enemy.charge += 15;
-                            }
-                        } else {
-                            enemy.isAttacking = true;
-                            enemy.attackType = 'kick';
-                            enemy.attackCooldown = 45;
-                            enemy.attackFrame = 0;
-                            checkAttackCollision(enemy, player, 20 * (enemy.damageMultiplier || 1));
-                            // Add charge for enemy
-                            if (enemy.charge < enemy.maxCharge) {
-                                enemy.charge += 23;
-                            }
-                        }
-                    }
-                    
-                    // Jump decision
-                    if (enemy.aiDecision < 0.1 && enemy.y >= groundY) {
-                        enemy.velocityY = -enemy.jumpPower;
-                    }
-                    
-                    enemy.aiCooldown = 30;
                 } else {
-                    enemy.aiCooldown--;
+                    enemy.velocityX *= 0.8;
                 }
+                
+                // Attack decision
+                if (distance < 100 && enemy.attackCooldown <= 0) {
+                    if (enemy.aiDecision < 0.6) {
+                        enemy.isAttacking = true;
+                        enemy.attackType = 'punch';
+                        enemy.attackCooldown = 35;
+                        enemy.attackFrame = 0;
+                        checkAttackCollision(enemy, player, 15 * (enemy.damageMultiplier || 1));
+                    } else {
+                        enemy.isAttacking = true;
+                        enemy.attackType = 'kick';
+                        enemy.attackCooldown = 45;
+                        enemy.attackFrame = 0;
+                        checkAttackCollision(enemy, player, 20 * (enemy.damageMultiplier || 1));
+                    }
+                }
+                
+                // Jump decision
+                if (enemy.aiDecision < 0.1 && enemy.y >= groundY) {
+                    enemy.velocityY = -enemy.jumpPower;
+                }
+                
+                enemy.aiCooldown = 30;
+            } else {
+                enemy.aiCooldown--;
             }
             
             // Physics
@@ -2211,7 +2101,7 @@
             
             // Boundaries
             if (enemy.x < 0) enemy.x = 0;
-            if (enemy.x + enemy.width > canvas.width) enemy.x = canvas.width - player.width;
+            if (enemy.x + enemy.width > canvas.width) enemy.x = canvas.width - enemy.width;
             if (enemy.y > groundY) {
                 enemy.y = groundY;
                 enemy.velocityY = 0;
@@ -2228,40 +2118,6 @@
             }
         }
         
-        function useEnemySpecialAttack(enemy) {
-            enemy.isUsingSpecial = true;
-            enemy.charge = 0;
-            enemy.specialCooldown = 180;
-            
-            const character = characters.find(c => c.id === enemy.characterType);
-            
-            // Simulate special attack (simplified version)
-            switch(character.specialAttack) {
-                case 'groundSlam':
-                    // Ground slam effect
-                    for (let i = 0; i < 20; i++) {
-                        particles.push(createParticle(enemy.x + enemy.width/2, enemy.y + enemy.height, 'death'));
-                    }
-                    if (Math.abs(player.x - enemy.x) < 150) {
-                        player.health -= 30;
-                        player.velocityY = -10;
-                    }
-                    break;
-                case 'shadowDash':
-                    // Shadow dash towards player
-                    const dashDistance = player.x < enemy.x ? -150 : 150;
-                    enemy.x += dashDistance;
-                    if (Math.abs(player.x - enemy.x) < 50) {
-                        player.health -= 25;
-                    }
-                    break;
-            }
-            
-            setTimeout(() => {
-                enemy.isUsingSpecial = false;
-            }, 500);
-        }
-        
         function checkAttackCollision(attacker, defender, damage) {
             const distance = Math.abs(attacker.x - defender.x);
             const range = attacker.attackRange || 60;
@@ -2269,7 +2125,7 @@
                 defender.health -= damage;
                 defender.health = Math.max(0, defender.health);
                 
-                if (defender.health <= 0 && defender !== player) {
+                if (defender.health <= 0 && defender !== player && defender !== player2) {
                     defender.alive = false;
                     createDeathEffect(defender.x + defender.width/2, defender.y + defender.height/2);
                 }
@@ -2287,7 +2143,10 @@
             document.getElementById('playerHealth').style.width = 
                 `${(player.health / player.maxHealth) * 100}%`;
             
-            if (gameMode === 'classic' && enemies.length > 0) {
+            if (isOnlineMode) {
+                document.getElementById('player2Health').style.width = 
+                    `${(player2.health / player2.maxHealth) * 100}%`;
+            } else if (gameMode === 'classic' && enemies.length > 0) {
                 document.getElementById('cpuHealth').style.width = 
                     `${(enemies[0].health / enemies[0].maxHealth) * 100}%`;
             }
@@ -2369,9 +2228,7 @@
                     let message = '';
                     if (gameMode === 'classic') {
                         message = gameDifficulty === 'hard' ? 'The Hard CPU was too strong!' : 'The CPU was too strong this time.';
-                    } else if (gameMode === 'story') {
-                        message = 'You were defeated. Try again!';
-                    } else if (gameMode === 'online') {
+                    } else if (isOnlineMode) {
                         message = 'You lost the match!';
                     } else {
                         message = `You survived ${currentWave} wave${currentWave > 1 ? 's' : ''}!`;
@@ -2380,61 +2237,11 @@
                 }
             } else if (gameMode === 'classic' && enemies.length > 0 && enemies[0].health <= 0) {
                 endGame('You Win!', 'Congratulations! You defeated the CPU!');
-            } else if (gameMode === 'story' && enemies.length > 0 && enemies[0].health <= 0) {
-                gameRunning = false;
-                cancelAnimationFrame(animationId);
-                completeStoryChapter();
-            } else if (gameMode === 'online') {
-                // Check if any player won
-                const aliveEnemies = enemies.filter(e => e.alive);
-                if (aliveEnemies.length === 0) {
-                    endOnlineGame('You won the match!');
-                } else if (player.health <= 0) {
-                    endOnlineGame('You lost the match!');
-                }
             }
         }
         
         function gameLoop() {
             if (!gameRunning) return;
-            
-            // Send game state to server in online mode
-            if (gameMode === 'online' && socket && socket.readyState === WebSocket.OPEN) {
-                const gameState = {
-                    type: 'gameState',
-                    players: {}
-                };
-                
-                // Add player state
-                gameState.players[player.id] = {
-                    x: player.x,
-                    y: player.y,
-                    velocityX: player.velocityX,
-                    velocityY: player.velocityY,
-                    facing: player.facing,
-                    isAttacking: player.isAttacking,
-                    attackType: player.attackType,
-                    health: player.health,
-                    charge: player.charge
-                };
-                
-                // Add enemy states (other players)
-                enemies.forEach(enemy => {
-                    gameState.players[enemy.id] = {
-                        x: enemy.x,
-                        y: enemy.y,
-                        velocityX: enemy.velocityX,
-                        velocityY: enemy.velocityY,
-                        facing: enemy.facing,
-                        isAttacking: enemy.isAttacking,
-                        attackType: enemy.attackType,
-                        health: enemy.health,
-                        charge: enemy.charge
-                    };
-                });
-                
-                socket.send(JSON.stringify(gameState));
-            }
             
             // Clear canvas
             ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -2447,17 +2254,21 @@
             updatePlayer();
             drawStickman(player, 'Player');
             
-            // Update and draw enemies
-            enemies.forEach(enemy => {
-                updateEnemy(enemy);
-                if (enemy.alive) {
-                    drawStickman(enemy, 'Enemy');
-                    // Draw health bars only in wave mode
-                    if (gameMode === 'wave') {
-                        drawEnemyHealthBar(enemy);
+            // Update and draw player 2 or enemies
+            if (isOnlineMode) {
+                drawStickman(player2, 'Player 2');
+            } else {
+                enemies.forEach(enemy => {
+                    updateEnemy(enemy);
+                    if (enemy.alive) {
+                        drawStickman(enemy, 'Enemy');
+                        // Draw health bars only in wave mode
+                        if (gameMode === 'wave') {
+                            drawEnemyHealthBar(enemy);
+                        }
                     }
-                }
-            });
+                });
+            }
             
             // Draw particles
             drawParticles();
@@ -2474,6 +2285,7 @@
         function startGame(mode, difficulty = 'normal') {
             gameMode = mode;
             gameDifficulty = difficulty;
+            isOnlineMode = false;
             
             if (mode === 'classic') {
                 document.getElementById('difficultySelection').style.display = 'none';
@@ -2492,10 +2304,12 @@
             if (mode === 'classic') {
                 document.getElementById('waveInfo').style.display = 'none';
                 document.getElementById('cpuHealthContainer').style.display = 'flex';
+                document.getElementById('player2Info').style.display = 'none';
                 enemies = [createEnemy(600, difficulty)];
-            } else { // wave mode
+            } else {
                 document.getElementById('waveInfo').style.display = 'flex';
                 document.getElementById('cpuHealthContainer').style.display = 'none';
+                document.getElementById('player2Info').style.display = 'none';
                 updateLivesDisplay();
                 spawnWave();
             }
@@ -2526,69 +2340,64 @@
             gameLoop();
         }
         
+        function startOnlineGame() {
+            gameMode = 'online';
+            isOnlineMode = true;
+            gameRunning = true;
+            
+            // Reset game state
+            particles = [];
+            
+            // Setup UI for online mode
+            document.getElementById('waveInfo').style.display = 'none';
+            document.getElementById('cpuHealthContainer').style.display = 'none';
+            document.getElementById('player2Info').style.display = 'flex';
+            
+            // Apply selected character stats to player
+            player.color = selectedCharacter.color;
+            player.accessories = selectedCharacter.accessories;
+            player.speed = selectedCharacter.stats.speed;
+            player.health = selectedCharacter.stats.health;
+            player.maxHealth = selectedCharacter.stats.health;
+            player.damageMultiplier = selectedCharacter.stats.damage;
+            player.attackRange = selectedCharacter.stats.range;
+            player.charge = 0;
+            player.specialCooldown = 0;
+            
+            // Reset player position
+            player.x = isPlayer1 ? 100 : 600;
+            player.y = groundY;
+            player.velocityX = 0;
+            player.velocityY = 0;
+            player.isAttacking = false;
+            player.attackType = null;
+            player.attackCooldown = 0;
+            player.attackFrame = 0;
+            player.facing = isPlayer1 ? 'right' : 'left';
+            isRespawning = false;
+            
+            // Initialize player 2
+            player2.health = 100;
+            player2.maxHealth = 100;
+            player2.x = isPlayer1 ? 600 : 100;
+            player2.y = groundY;
+            player2.facing = isPlayer1 ? 'left' : 'right';
+            
+            updateHealthBars();
+            gameLoop();
+        }
+        
         function endGame(title, message) {
             gameRunning = false;
+            if (socket) {
+                socket.disconnect();
+                socket = null;
+            }
             cancelAnimationFrame(animationId);
             document.getElementById('gameOverText').textContent = title;
             document.getElementById('gameOverMessage').textContent = message;
             document.getElementById('gameOver').style.display = 'block';
-        }
-        
-        function drawEnemyHealthBar(enemy) {
-            if (!enemy.alive) return;
-            
-            const barWidth = 100; // Half the size of normal health bars
-            const barHeight = 12;
-            const x = enemy.x + enemy.width/2 - barWidth/2;
-            const y = enemy.y - 30;
-            
-            // Background
-            ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
-            ctx.fillRect(x, y, barWidth, barHeight);
-            
-            // Border
-            ctx.strokeStyle = '#333';
-            ctx.lineWidth = 1;
-            ctx.strokeRect(x, y, barWidth, barHeight);
-            
-            // Health fill
-            const healthPercent = enemy.health / enemy.maxHealth;
-            ctx.fillStyle = healthPercent > 0.5 ? '#44ff44' : healthPercent > 0.25 ? '#ffaa00' : '#ff4444';
-            ctx.fillRect(x + 1, y + 1, (barWidth - 2) * healthPercent, barHeight - 2);
-        }
-        
-        function drawParticles() {
-            particles.forEach((particle, index) => {
-                ctx.save();
-                ctx.globalAlpha = particle.life;
-                ctx.fillStyle = particle.color;
-                ctx.beginPath();
-                ctx.arc(particle.x, particle.y, particle.size, 0, Math.PI * 2);
-                ctx.fill();
-                ctx.restore();
-                
-                // Update particle
-                particle.x += particle.velocityX;
-                particle.y += particle.velocityY;
-                particle.life -= particle.decay;
-                particle.velocityY += 0.2; // gravity
-                
-                if (particle.life <= 0) {
-                    particles.splice(index, 1);
-                }
-            });
-        }
-        
-        function createDeathEffect(x, y) {
-            for (let i = 0; i < 20; i++) {
-                particles.push(createParticle(x, y, 'death'));
-            }
-        }
-        
-        function createSpawnEffect(x, y) {
-            for (let i = 0; i < 15; i++) {
-                particles.push(createParticle(x, y, 'spawn'));
-            }
+            updateConnectionStatus(false);
         }
         
         // Initialize health bars
