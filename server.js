@@ -1,231 +1,127 @@
-// server.js
-const WebSocket = require('ws');
+const express = require('express');
 const http = require('http');
-const fs = require('fs');
+const socketIo = require('socket.io');
 const path = require('path');
 
-// Create HTTP server to serve the frontend
-const server = http.createServer((req, res) => {
-    const filePath = path.join(__dirname, req.url === '/' ? 'index.html' : req.url);
-    const extname = path.extname(filePath);
-    let contentType = 'text/html';
-
-    switch (extname) {
-        case '.js':
-            contentType = 'text/javascript';
-            break;
-        case '.css':
-            contentType = 'text/css';
-            break;
-        case '.json':
-            contentType = 'application/json';
-            break;
-        case '.png':
-            contentType = 'image/png';
-            break;
-        case '.jpg':
-            contentType = 'image/jpg';
-            break;
-        case '.ico':
-            contentType = 'image/x-icon';
-            break;
+const app = express();
+const server = http.createServer(app);
+const io = socketIo(server, {
+    cors: {
+        origin: "*",
+        methods: ["GET", "POST"]
     }
-
-    fs.readFile(filePath, (err, content) => {
-        if (err) {
-            if (err.code === 'ENOENT') {
-                res.writeHead(404);
-                res.end('File not found');
-            } else {
-                res.writeHead(500);
-                res.end('Server error: ' + err.code);
-            }
-        } else {
-            res.writeHead(200, { 'Content-Type': contentType });
-            res.end(content, 'utf-8');
-        }
-    });
 });
 
-// Initialize WebSocket server
-const wss = new WebSocket.Server({ server });
-
-// Store active rooms and players
-const rooms = new Map();
-const players = new Map();
-
-function generateRoomCode() {
-    return Math.random().toString(36).substr(2, 6).toUpperCase();
-}
-
-wss.on('connection', (ws) => {
-    console.log('New client connected');
-    
-    let playerId = null;
-    let roomId = null;
-
-    ws.on('message', (message) => {
-        try {
-            const data = JSON.parse(message);
-
-            switch (data.type) {
-                case 'createRoom':
-                    roomId = generateRoomCode();
-                    playerId = 'player_' + Math.random().toString(36).substr(2, 9);
-
-                    rooms.set(roomId, {
-                        host: playerId,
-                        players: new Map(),
-                        maxPlayers: 2
-                    });
-
-                    rooms.get(roomId).players.set(playerId, {
-                        id: playerId,
-                        character: null,
-                        health: 100,
-                        maxHealth: 100
-                    });
-
-                    players.set(playerId, { ws, roomId });
-
-                    ws.send(JSON.stringify({
-                        type: 'roomCreated',
-                        roomId: roomId
-                    }));
-
-                    console.log(`Room created: ${roomId} by ${playerId}`);
-                    break;
-
-                case 'joinRoom':
-                    roomId = data.roomId;
-                    playerId = 'player_' + Math.random().toString(36).substr(2, 9);
-
-                    if (rooms.has(roomId)) {
-                        const room = rooms.get(roomId);
-
-                        if (room.players.size < room.maxPlayers) {
-                            room.players.set(playerId, {
-                                id: playerId,
-                                character: data.character,
-                                health: 100,
-                                maxHealth: 100
-                            });
-
-                            players.set(playerId, { ws, roomId });
-
-                            broadcastToRoom(roomId, {
-                                type: 'playerJoined',
-                                playerId,
-                                character: data.character
-                            });
-
-                            if (room.players.size === room.maxPlayers) {
-                                broadcastToRoom(roomId, {
-                                    type: 'gameStart'
-                                });
-                            }
-
-                            console.log(`Player ${playerId} joined room ${roomId}`);
-                        } else {
-                            ws.send(JSON.stringify({
-                                type: 'error',
-                                message: 'Room is full'
-                            }));
-                        }
-                    } else {
-                        ws.send(JSON.stringify({
-                            type: 'error',
-                            message: 'Room not found'
-                        }));
-                    }
-                    break;
-
-                case 'gameState':
-                    if (roomId && rooms.has(roomId)) {
-                        broadcastToRoom(roomId, data, playerId);
-                    }
-                    break;
-
-                case 'characterSelect':
-                    if (roomId && rooms.has(roomId)) {
-                        const room = rooms.get(roomId);
-                        if (room.players.has(playerId)) {
-                            room.players.get(playerId).character = data.character;
-                            broadcastToRoom(roomId, {
-                                type: 'characterSelected',
-                                playerId,
-                                character: data.character
-                            });
-                        }
-                    }
-                    break;
-            }
-        } catch (error) {
-            console.error('Error parsing message:', error);
-            ws.send(JSON.stringify({
-                type: 'error',
-                message: 'Invalid message format'
-            }));
-        }
-    });
-
-    ws.on('close', () => {
-        console.log('Client disconnected');
-
-        if (playerId && roomId) {
-            if (rooms.has(roomId)) {
-                const room = rooms.get(roomId);
-                room.players.delete(playerId);
-
-                broadcastToRoom(roomId, {
-                    type: 'playerLeft',
-                    playerId
-                });
-
-                if (room.players.size === 0) {
-                    rooms.delete(roomId);
-                    console.log(`Room ${roomId} deleted (empty)`);
-                }
-            }
-
-            players.delete(playerId);
-        }
-    });
-
-    ws.on('error', (error) => {
-        console.error('WebSocket error:', error);
-    });
-});
-
-function broadcastToRoom(roomId, message, excludePlayerId = null) {
-    if (rooms.has(roomId)) {
-        const room = rooms.get(roomId);
-        room.players.forEach((player, playerId) => {
-            if (playerId !== excludePlayerId && players.has(playerId)) {
-                const playerData = players.get(playerId);
-                if (playerData.ws.readyState === WebSocket.OPEN) {
-                    playerData.ws.send(JSON.stringify(message));
-                }
-            }
-        });
-    }
-}
-
-setInterval(() => {
-    console.log(`Active rooms: ${rooms.size}`);
-    console.log(`Active players: ${players.size}`);
-
-    for (const [roomId, room] of rooms.entries()) {
-        if (room.players.size === 0) {
-            rooms.delete(roomId);
-            console.log(`Cleaned up empty room: ${roomId}`);
-        }
-    }
-}, 30000);
-
-// ✅ PORT from environment for Render
 const PORT = process.env.PORT || 3000;
+
+// Game rooms
+const rooms = new Map();
+const waitingPlayers = [];
+
+app.use(express.static(path.join(__dirname, 'public')));
+
+io.on('connection', (socket) => {
+    console.log(`User connected: ${socket.id}`);
+
+    // Handle finding a match
+    socket.on('findMatch', () => {
+        // Check if there's a waiting player
+        if (waitingPlayers.length > 0) {
+            const opponent = waitingPlayers.shift();
+            const roomId = `room_${Date.now()}`;
+            
+            // Create room
+            rooms.set(roomId, {
+                player1: opponent.id,
+                player2: socket.id,
+                gameState: {
+                    player1: null,
+                    player2: null
+                }
+            });
+            
+            // Join both players to the room
+            socket.join(roomId);
+            opponent.join(roomId);
+            
+            // Notify both players
+            socket.emit('matchFound', {
+                roomId: roomId,
+                isPlayer1: false
+            });
+            
+            opponent.emit('matchFound', {
+                roomId: roomId,
+                isPlayer1: true
+            });
+            
+            // Notify players about each other
+            socket.to(roomId).emit('playerJoined', {
+                playerId: socket.id,
+                character: null // Will be sent when game starts
+            });
+            
+            socket.emit('playerJoined', {
+                playerId: opponent.id,
+                character: null
+            });
+            
+            console.log(`Match created: ${roomId}`);
+        } else {
+            // Add to waiting list
+            waitingPlayers.push(socket);
+            socket.emit('waitingForMatch');
+            console.log(`Player ${socket.id} waiting for match`);
+        }
+    });
+    
+    // Handle game state updates
+    socket.on('gameState', (data) => {
+        const room = rooms.get(data.roomId);
+        if (room) {
+            // Broadcast to other player in the room
+            socket.to(data.roomId).emit('gameState', {
+                ...data,
+                playerId: socket.id
+            });
+        }
+    });
+    
+    // Handle special attacks
+    socket.on('specialAttack', (data) => {
+        const room = rooms.get(data.roomId);
+        if (room) {
+            // Broadcast to other player in the room
+            socket.to(data.roomId).emit('specialAttack', {
+                ...data,
+                playerId: socket.id
+            });
+        }
+    });
+    
+    // Handle disconnection
+    socket.on('disconnect', () => {
+        console.log(`User disconnected: ${socket.id}`);
+        
+        // Remove from waiting list
+        const waitingIndex = waitingPlayers.findIndex(p => p.id === socket.id);
+        if (waitingIndex !== -1) {
+            waitingPlayers.splice(waitingIndex, 1);
+        }
+        
+        // Notify other player in room
+        for (const [roomId, room] of rooms.entries()) {
+            if (room.player1 === socket.id || room.player2 === socket.id) {
+                socket.to(roomId).emit('playerDisconnected');
+                rooms.delete(roomId);
+                console.log(`Room ${roomId} deleted due to disconnection`);
+                break;
+            }
+        }
+    });
+});
+
 server.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
-    console.log(`WebSocket server ready for connections`);
+    console.log('Open http://localhost:3000 to play');
 });
