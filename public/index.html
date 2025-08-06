@@ -786,7 +786,8 @@
             charge: 0,
             maxCharge: 100,
             specialCooldown: 0,
-            isUsingSpecial: false
+            isUsingSpecial: false,
+            isLocalPlayer: true
         };
         
         let player2 = {
@@ -812,7 +813,8 @@
             charge: 0,
             maxCharge: 100,
             specialCooldown: 0,
-            isUsingSpecial: false
+            isUsingSpecial: false,
+            isLocalPlayer: false
         };
         
         function createEnemy(x = 600, difficulty = 'normal') {
@@ -1360,7 +1362,7 @@
         }
         
         function connectToServer() {
-            socket = io();
+            socket = io('http://localhost:3000');
             
             socket.on('connect', () => {
                 updateConnectionStatus(true);
@@ -1514,21 +1516,12 @@
             // Damage all enemies in range
             const targets = isOnlineMode ? [player2] : enemies;
             targets.forEach(target => {
-                if (target.alive !== false) {
+                if (target.health > 0) {
                     const distance = Math.abs(target.x - player.x);
                     if (distance < 150) {
                         target.health -= 40;
                         target.velocityY = -15; // Launch enemies
-                        if (target.health <= 0) {
-                            if (isOnlineMode) {
-                                target.alive = false;
-                                createDeathEffect(target.x + target.width/2, target.y + target.height/2);
-                                endGame('You Win!', 'Congratulations! You defeated your opponent!');
-                            } else {
-                                target.alive = false;
-                                createDeathEffect(target.x + target.width/2, target.y + target.height/2);
-                            }
-                        }
+                        createDeathEffect(target.x + target.width/2, target.y + target.height/2);
                     }
                 }
             });
@@ -1545,9 +1538,7 @@
             if (distance < 150) {
                 player.health -= 40;
                 player.velocityY = -15;
-                if (player.health <= 0) {
-                    endGame('You Lose!', 'Your opponent defeated you!');
-                }
+                createDeathEffect(player.x + player.width/2, player.y + player.height/2);
             }
         }
         
@@ -1573,20 +1564,11 @@
             
             const targets = isOnlineMode ? [player2] : enemies;
             targets.forEach(target => {
-                if (target.alive !== false && 
+                if (target.health > 0 && 
                     ((player.facing === 'right' && target.x > startX && target.x < endX) ||
                      (player.facing === 'left' && target.x < startX && target.x > endX))) {
                     target.health -= 30;
-                    if (target.health <= 0) {
-                        if (isOnlineMode) {
-                            target.alive = false;
-                            createDeathEffect(target.x + target.width/2, target.y + target.height/2);
-                            endGame('You Win!', 'Congratulations! You defeated your opponent!');
-                        } else {
-                            target.alive = false;
-                            createDeathEffect(target.x + target.width/2, target.y + target.height/2);
-                        }
-                    }
+                    createDeathEffect(target.x + target.width/2, target.y + target.height/2);
                 }
             });
         }
@@ -1610,9 +1592,8 @@
             if ((target.facing === 'right' && player.x > startX && player.x < endX) ||
                 (target.facing === 'left' && player.x < startX && player.x > endX)) {
                 player.health -= 30;
-                if (player.health <= 0) {
-                    endGame('You Lose!', 'Your opponent defeated you!');
-                }
+                player.velocityY = -15;
+                createDeathEffect(player.x + player.width/2, player.y + player.height/2);
             }
         }
         
@@ -1649,24 +1630,14 @@
                     // Check collision with targets
                     const targets = isOnlineMode ? [player2] : enemies;
                     targets.forEach(target => {
-                        if (target.alive !== false) {
+                        if (target.health > 0) {
                             const distance = Math.sqrt(
                                 Math.pow(target.x + target.width/2 - projectile.x, 2) + 
                                 Math.pow(target.y + target.height/2 - projectile.y, 2)
                             );
                             if (distance < 20) {
                                 target.health -= projectile.damage;
-                                if (target.health <= 0) {
-                                    if (isOnlineMode) {
-                                        target.alive = false;
-                                        createDeathEffect(target.x + target.width/2, target.y + target.height/2);
-                                        endGame('You Win!', 'Congratulations! You defeated your opponent!');
-                                    } else {
-                                        target.alive = false;
-                                        createDeathEffect(target.x + target.width/2, target.y + target.height/2);
-                                    }
-                                }
-                                projectile.life = 0;
+                                createDeathEffect(target.x + target.width/2, target.y + target.height/2);
                             }
                         }
                     });
@@ -1717,10 +1688,7 @@
                     );
                     if (distance < 20) {
                         player.health -= projectile.damage;
-                        if (player.health <= 0) {
-                            endGame('You Lose!', 'Your opponent defeated you!');
-                        }
-                        projectile.life = 0;
+                        createDeathEffect(player.x + player.width/2, player.y + player.height/2);
                     }
                     
                     if (projectile.life > 0) {
@@ -1744,7 +1712,7 @@
             // Slow all enemies
             const targets = isOnlineMode ? [player2] : enemies;
             targets.forEach(target => {
-                if (target.alive !== false) {
+                if (target.health > 0) {
                     target.slowed = true;
                     target.slowTimer = 300; // 5 seconds
                     target.speed *= 0.3;
@@ -1776,22 +1744,13 @@
             // Damage and launch nearby enemies
             const targets = isOnlineMode ? [player2] : enemies;
             targets.forEach(target => {
-                if (target.alive !== false) {
+                if (target.health > 0) {
                     const distance = Math.abs(target.x - player.x);
                     if (distance < 80) {
                         target.health -= 35;
                         target.velocityY = -20; // Strong launch
                         target.velocityX = (target.x < player.x ? -10 : 10);
-                        if (target.health <= 0) {
-                            if (isOnlineMode) {
-                                target.alive = false;
-                                createDeathEffect(target.x + target.width/2, target.y + target.height/2);
-                                endGame('You Win!', 'Congratulations! You defeated your opponent!');
-                            } else {
-                                target.alive = false;
-                                createDeathEffect(target.x + target.width/2, target.y + target.height/2);
-                            }
-                        }
+                        createDeathEffect(target.x + target.width/2, target.y + target.height/2);
                     }
                 }
             });
@@ -1809,9 +1768,7 @@
                 player.health -= 35;
                 player.velocityY = -20;
                 player.velocityX = (player.x < target.x ? -10 : 10);
-                if (player.health <= 0) {
-                    endGame('You Lose!', 'Your opponent defeated you!');
-                }
+                createDeathEffect(player.x + player.width/2, player.y + player.height/2);
             }
         }
         
@@ -1847,22 +1804,13 @@
                 // Check collision with targets
                 const targets = isOnlineMode ? [player2] : enemies;
                 targets.forEach(target => {
-                    if (target.alive !== false) {
+                    if (target.health > 0) {
                         const targetCenterX = target.x + target.width/2;
                         const targetCenterY = target.y + target.height/2;
                         if (targetCenterX >= startX && targetCenterX <= startX + (endX - startX) * sweepProgress &&
                             targetCenterY >= player.y + 20 && targetCenterY <= player.y + 20 + beamWidth) {
                             target.health -= 2; // Continuous damage
-                            if (target.health <= 0) {
-                                if (isOnlineMode) {
-                                    target.alive = false;
-                                    createDeathEffect(target.x + target.width/2, target.y + target.height/2);
-                                    endGame('You Win!', 'Congratulations! You defeated your opponent!');
-                                } else {
-                                    target.alive = false;
-                                    createDeathEffect(target.x + target.width/2, target.y + target.height/2);
-                                }
-                            }
+                            createDeathEffect(target.x + target.width/2, target.y + target.height/2);
                         }
                     }
                 });
@@ -1908,9 +1856,7 @@
                 if (playerCenterX >= startX && playerCenterX <= startX + (endX - startX) * sweepProgress &&
                     playerCenterY >= target.y + 20 && playerCenterY <= target.y + 20 + beamWidth) {
                     player.health -= 2; // Continuous damage
-                    if (player.health <= 0) {
-                        endGame('You Lose!', 'Your opponent defeated you!');
-                    }
+                    createDeathEffect(player.x + player.width/2, player.y + player.height/2);
                 }
                 
                 requestAnimationFrame(animateLaser);
@@ -1920,23 +1866,23 @@
         }
         
         // Update functions
-        function updatePlayer() {
-            if (isRespawning) return;
+        function updatePlayer(character) {
+            if (isRespawning || !character.isLocalPlayer) return;
             
             // Movement
             if (keys['a']) {
-                player.velocityX = -player.speed;
-                player.facing = 'left';
+                character.velocityX = -character.speed;
+                character.facing = 'left';
             } else if (keys['d']) {
-                player.velocityX = player.speed;
-                player.facing = 'right';
+                character.velocityX = character.speed;
+                character.facing = 'right';
             } else {
-                player.velocityX *= 0.8;
+                character.velocityX *= 0.8;
             }
             
             // Jump
-            if (keys['w'] && player.y >= groundY) {
-                player.velocityY = -player.jumpPower;
+            if (keys['w'] && character.y >= groundY) {
+                character.velocityY = -character.jumpPower;
             }
             
             // Special attack
@@ -1945,80 +1891,80 @@
             }
             
             // Attacks
-            if (player.attackCooldown <= 0) {
+            if (character.attackCooldown <= 0) {
                 if (keys[' ']) {
-                    player.isAttacking = true;
-                    player.attackType = 'punch';
-                    player.attackCooldown = 30;
-                    player.attackFrame = 0;
+                    character.isAttacking = true;
+                    character.attackType = 'punch';
+                    character.attackCooldown = 30;
+                    character.attackFrame = 0;
                     // Add charge (1.5x rate)
-                    if (player.charge < player.maxCharge) {
-                        player.charge += 15;
+                    if (character.charge < character.maxCharge) {
+                        character.charge += 15;
                     }
                     // Check collision with all targets
                     const targets = isOnlineMode ? [player2] : enemies;
                     targets.forEach(target => {
-                        if (target.alive !== false) {
-                            checkAttackCollision(player, target, 15 * player.damageMultiplier);
+                        if (target.health > 0) {
+                            checkAttackCollision(character, target, 15 * character.damageMultiplier);
                         }
                     });
                 } else if (keys['f']) {
-                    player.isAttacking = true;
-                    player.attackType = 'kick';
-                    player.attackCooldown = 40;
-                    player.attackFrame = 0;
+                    character.isAttacking = true;
+                    character.attackType = 'kick';
+                    character.attackCooldown = 40;
+                    character.attackFrame = 0;
                     // Add charge (1.5x rate)
-                    if (player.charge < player.maxCharge) {
-                        player.charge += 23;
+                    if (character.charge < character.maxCharge) {
+                        character.charge += 23;
                     }
                     // Check collision with all targets
                     const targets = isOnlineMode ? [player2] : enemies;
                     targets.forEach(target => {
-                        if (target.alive !== false) {
-                            checkAttackCollision(player, target, 20 * player.damageMultiplier);
+                        if (target.health > 0) {
+                            checkAttackCollision(character, target, 20 * character.damageMultiplier);
                         }
                     });
                 }
             } else {
-                player.attackCooldown--;
-                player.attackFrame++;
-                if (player.attackCooldown <= 20) {
-                    player.isAttacking = false;
-                    player.attackType = null;
+                character.attackCooldown--;
+                character.attackFrame++;
+                if (character.attackCooldown <= 20) {
+                    character.isAttacking = false;
+                    character.attackType = null;
                 }
             }
             
             // Update special cooldown
-            if (player.specialCooldown > 0) {
-                player.specialCooldown--;
+            if (character.specialCooldown > 0) {
+                character.specialCooldown--;
             }
             
             // Physics
-            player.velocityY += gravity;
-            player.x += player.velocityX;
-            player.y += player.velocityY;
+            character.velocityY += gravity;
+            character.x += character.velocityX;
+            character.y += character.velocityY;
             
             // Boundaries
-            if (player.x < 0) player.x = 0;
-            if (player.x + player.width > canvas.width) player.x = canvas.width - player.width;
-            if (player.y > groundY) {
-                player.y = groundY;
-                player.velocityY = 0;
+            if (character.x < 0) character.x = 0;
+            if (character.x + character.width > canvas.width) character.x = canvas.width - character.width;
+            if (character.y > groundY) {
+                character.y = groundY;
+                character.velocityY = 0;
             }
             
             // Send game state to server if online
-            if (isOnlineMode && socket) {
+            if (isOnlineMode && socket && character.isLocalPlayer) {
                 socket.emit('gameState', {
                     roomId: roomId,
-                    x: player.x,
-                    y: player.y,
-                    velocityX: player.velocityX,
-                    velocityY: player.velocityY,
-                    facing: player.facing,
-                    isAttacking: player.isAttacking,
-                    attackType: player.attackType,
-                    health: player.health,
-                    isUsingSpecial: player.isUsingSpecial
+                    x: character.x,
+                    y: character.y,
+                    velocityX: character.velocityX,
+                    velocityY: character.velocityY,
+                    facing: character.facing,
+                    isAttacking: character.isAttacking,
+                    attackType: character.attackType,
+                    health: character.health,
+                    isUsingSpecial: character.isUsingSpecial
                 });
             }
         }
@@ -2235,6 +2181,8 @@
                     }
                     endGame('Game Over', message);
                 }
+            } else if (player2.health <= 0 && isOnlineMode) {
+                endGame('You Win!', 'Congratulations! You defeated your opponent!');
             } else if (gameMode === 'classic' && enemies.length > 0 && enemies[0].health <= 0) {
                 endGame('You Win!', 'Congratulations! You defeated the CPU!');
             }
@@ -2250,14 +2198,15 @@
             ctx.fillStyle = '#8B4513';
             ctx.fillRect(0, groundY + 60, canvas.width, 40);
             
-            // Update and draw player
-            updatePlayer();
+            // Update and draw players
+            updatePlayer(player);
             drawStickman(player, 'Player');
             
-            // Update and draw player 2 or enemies
             if (isOnlineMode) {
+                updatePlayer(player2);
                 drawStickman(player2, 'Player 2');
             } else {
+                // Update and draw enemies
                 enemies.forEach(enemy => {
                     updateEnemy(enemy);
                     if (enemy.alive) {
@@ -2353,7 +2302,7 @@
             document.getElementById('cpuHealthContainer').style.display = 'none';
             document.getElementById('player2Info').style.display = 'flex';
             
-            // Apply selected character stats to player
+            // Apply selected character stats to players
             player.color = selectedCharacter.color;
             player.accessories = selectedCharacter.accessories;
             player.speed = selectedCharacter.stats.speed;
@@ -2364,7 +2313,17 @@
             player.charge = 0;
             player.specialCooldown = 0;
             
-            // Reset player position
+            player2.color = selectedCharacter.color; // Could be different in future
+            player2.accessories = selectedCharacter.accessories;
+            player2.speed = selectedCharacter.stats.speed;
+            player2.health = selectedCharacter.stats.health;
+            player2.maxHealth = selectedCharacter.stats.health;
+            player2.damageMultiplier = selectedCharacter.stats.damage;
+            player2.attackRange = selectedCharacter.stats.range;
+            player2.charge = 0;
+            player2.specialCooldown = 0;
+            
+            // Reset player positions
             player.x = isPlayer1 ? 100 : 600;
             player.y = groundY;
             player.velocityX = 0;
@@ -2374,14 +2333,19 @@
             player.attackCooldown = 0;
             player.attackFrame = 0;
             player.facing = isPlayer1 ? 'right' : 'left';
+            player.isLocalPlayer = true;
             isRespawning = false;
             
-            // Initialize player 2
-            player2.health = 100;
-            player2.maxHealth = 100;
             player2.x = isPlayer1 ? 600 : 100;
             player2.y = groundY;
+            player2.velocityX = 0;
+            player2.velocityY = 0;
+            player2.isAttacking = false;
+            player2.attackType = null;
+            player2.attackCooldown = 0;
+            player2.attackFrame = 0;
             player2.facing = isPlayer1 ? 'left' : 'right';
+            player2.isLocalPlayer = false;
             
             updateHealthBars();
             gameLoop();
