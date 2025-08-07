@@ -541,11 +541,133 @@
             gap: 10px;
             color: white;
         }
+        
+        .debug-info {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 10px;
+            border-radius: 5px;
+            font-size: 12px;
+            display: none;
+        }
+        
+        .combo-display {
+            position: absolute;
+            top: 50px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(255, 215, 0, 0.8);
+            color: #000;
+            padding: 10px 20px;
+            border-radius: 20px;
+            font-size: 24px;
+            font-weight: bold;
+            display: none;
+        }
+        
+        .achievement-notification {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(255, 215, 0, 0.9);
+            color: #000;
+            padding: 15px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+            transform: translateX(400px);
+            transition: transform 0.5s ease;
+            z-index: 1000;
+        }
+        
+        .achievement-notification.show {
+            transform: translateX(0);
+        }
+        
+        .training-mode-ui {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 10px;
+            border-radius: 5px;
+            font-size: 14px;
+            display: none;
+        }
+        
+        .power-up {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            animation: pulse 1s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.2); }
+            100% { transform: scale(1); }
+        }
+        
+        .loading-screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+        }
+        
+        .loading-content {
+            text-align: center;
+            color: white;
+        }
+        
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 5px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: #667eea;
+            animation: spin 1s ease-in-out infinite;
+            margin: 0 auto 20px;
+        }
+        
+        .level-display {
+            position: absolute;
+            top: 80px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 123, 255, 0.8);
+            color: white;
+            padding: 5px 15px;
+            border-radius: 15px;
+            font-size: 16px;
+            display: none;
+        }
     </style>
 </head>
 <body>
     <div class="game-container">
         <div class="connection-status disconnected" id="connectionStatus">Disconnected</div>
+        <div class="debug-info" id="debugInfo"></div>
+        <div class="combo-display" id="comboDisplay">COMBO: 0</div>
+        <div class="level-display" id="levelDisplay">Level 1</div>
+        <div class="training-mode-ui" id="trainingModeUI">
+            Training Mode<br>
+            Dummy Health: <span id="dummyHealth">100%</span>
+        </div>
+        <div class="achievement-notification" id="achievementNotification">
+            <div class="achievement-title">Achievement Unlocked!</div>
+            <div class="achievement-name" id="achievementName"></div>
+        </div>
         <div class="game-info" id="gameInfo">
             <div class="health-bar-container">
                 <span>Player 1</span>
@@ -610,11 +732,15 @@
         <div class="mode-buttons">
             <button class="mode-button" onclick="showDifficultySelection()">Classic Mode</button>
             <button class="mode-button" onclick="startGame('wave')">Wave Mode</button>
+            <button class="mode-button" onclick="startGame('survival')">Survival Mode</button>
+            <button class="mode-button" onclick="startGame('training')">Training Mode</button>
             <button class="mode-button" onclick="enterOnlineMode()">Online Mode</button>
         </div>
         <div class="mode-description">
             <p><strong>Classic Mode:</strong> Fight against a single CPU opponent</p>
             <p><strong>Wave Mode:</strong> Survive waves of enemies with 3 lives!</p>
+            <p><strong>Survival Mode:</strong> Endless enemies with increasing difficulty!</p>
+            <p><strong>Training Mode:</strong> Practice against a dummy opponent</p>
             <p><strong>Online Mode:</strong> Battle against other players online!</p>
         </div>
     </div>
@@ -646,6 +772,108 @@
     
     <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
     <script>
+        // Game configuration constants
+        const CONFIG = {
+            GRAVITY: 0.8,
+            GROUND_Y: 300,
+            CANVAS_WIDTH: 800,
+            CANVAS_HEIGHT: 400,
+            STUN_DURATION: 120, // 2 seconds at 60fps
+            SLOW_DURATION: 300, // 5 seconds
+            SPECIAL_COOLDOWN: 180, // 3 seconds
+            PARTICLE_COUNT: {
+                DEATH_EFFECT: 20,
+                SPAWN_EFFECT: 15,
+                GROUND_SLAM: 30
+            }
+        };
+        
+        // Game state management
+        const GameState = {
+            MENU: 'menu',
+            CHARACTER_SELECT: 'character_select',
+            MODE_SELECT: 'mode_select',
+            DIFFICULTY_SELECT: 'difficulty_select',
+            ONLINE_LOBBY: 'online_lobby',
+            PLAYING: 'playing',
+            GAME_OVER: 'game_over'
+        };
+        
+        let currentGameState = GameState.MENU;
+        
+        // Debug system
+        const DEBUG = {
+            enabled: false,
+            showHitboxes: false,
+            showFPS: false,
+            fps: 0,
+            frameCount: 0,
+            lastFPSUpdate: 0,
+            
+            toggle: function() {
+                this.enabled = !this.enabled;
+                document.getElementById('debugInfo').style.display = this.enabled ? 'block' : 'none';
+            },
+            
+            update: function(timestamp) {
+                this.frameCount++;
+                if (timestamp - this.lastFPSUpdate >= 1000) {
+                    this.fps = this.frameCount;
+                    this.frameCount = 0;
+                    this.lastFPSUpdate = timestamp;
+                    if (this.enabled) {
+                        document.getElementById('debugInfo').textContent = `FPS: ${this.fps}`;
+                    }
+                }
+            }
+        };
+        
+        // Easing functions
+        const Easing = {
+            easeInOutQuad: function(t) {
+                return t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t;
+            },
+            
+            easeOutBounce: function(t) {
+                if (t < 1/2.75) {
+                    return 7.5625 * t * t;
+                } else if (t < 2/2.75) {
+                    return 7.5625 * (t -= 1.5/2.75) * t + 0.75;
+                } else if (t < 2.5/2.75) {
+                    return 7.5625 * (t -= 2.25/2.75) * t + 0.9375;
+                } else {
+                    return 7.5625 * (t -= 2.625/2.75) * t + 0.984375;
+                }
+            }
+        };
+        
+        // Screen shake effect
+        const screenShake = {
+            intensity: 0,
+            duration: 0,
+            
+            shake: function(intensity, duration) {
+                this.intensity = intensity;
+                this.duration = duration;
+            },
+            
+            update: function() {
+                if (this.duration > 0) {
+                    this.duration--;
+                    const offsetX = (Math.random() - 0.5) * this.intensity;
+                    const offsetY = (Math.random() - 0.5) * this.intensity;
+                    ctx.save();
+                    ctx.translate(offsetX, offsetY);
+                }
+            },
+            
+            restore: function() {
+                if (this.duration > 0) {
+                    ctx.restore();
+                }
+            }
+        };
+        
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
         let gameRunning = false;
@@ -663,6 +891,106 @@
         let roomId = null;
         let isPlayer1 = true;
         let player2Data = null;
+        let lastTime = 0;
+        let powerUps = [];
+        let achievements = [
+            { id: 'first_win', name: 'First Victory', description: 'Win your first match', unlocked: false },
+            { id: 'combo_master', name: 'Combo Master', description: 'Get a 10-hit combo', unlocked: false },
+            { id: 'specialist', name: 'Specialist', description: 'Use special attacks 50 times', unlocked: false },
+            { id: 'survivor', name: 'Survivor', description: 'Survive 5 minutes in survival mode', unlocked: false }
+        ];
+        let specialAttackCount = 0;
+        let survivalStartTime = 0;
+        
+        // Particle pool for better performance
+        const particlePool = {
+            particles: [],
+            activeParticles: [],
+            
+            create: function(x, y, type = 'death') {
+                let particle = this.particles.pop();
+                if (!particle) {
+                    particle = {
+                        x: 0, y: 0, velocityX: 0, velocityY: 0, 
+                        size: 0, life: 0, decay: 0, color: '', type: ''
+                    };
+                }
+                
+                // Reset particle properties
+                particle.x = x;
+                particle.y = y;
+                particle.velocityX = (Math.random() - 0.5) * 8;
+                particle.velocityY = (Math.random() - 0.5) * 8;
+                particle.size = Math.random() * 5 + 2;
+                particle.life = 1.0;
+                particle.decay = 0.02;
+                particle.color = type === 'death' ? '#ff4444' : '#44ff44';
+                particle.type = type;
+                
+                if (type === 'spawn') {
+                    particle.velocityX *= 0.3;
+                    particle.velocityY *= 0.3;
+                    particle.decay = 0.01;
+                } else if (type === 'powerup') {
+                    particle.color = '#ffff00';
+                    particle.decay = 0.03;
+                }
+                
+                this.activeParticles.push(particle);
+                return particle;
+            },
+            
+            update: function() {
+                for (let i = this.activeParticles.length - 1; i >= 0; i--) {
+                    const particle = this.activeParticles[i];
+                    particle.x += particle.velocityX;
+                    particle.y += particle.velocityY;
+                    particle.life -= particle.decay;
+                    particle.velocityY += 0.2; // gravity
+                    
+                    if (particle.life <= 0) {
+                        this.activeParticles.splice(i, 1);
+                        this.particles.push(particle); // Return to pool
+                    }
+                }
+            },
+            
+            draw: function() {
+                this.activeParticles.forEach(particle => {
+                    ctx.save();
+                    ctx.globalAlpha = particle.life;
+                    ctx.fillStyle = particle.color;
+                    ctx.beginPath();
+                    ctx.arc(particle.x, particle.y, particle.size, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.restore();
+                });
+            },
+            
+            clear: function() {
+                this.activeParticles = [];
+                // Return all particles to pool
+                this.particles = this.particles.concat(this.activeParticles);
+            }
+        };
+        
+        // Sound manager (stub implementation)
+        const SoundMixer = {
+            volume: {
+                master: 1.0,
+                effects: 1.0,
+                music: 1.0
+            },
+            
+            setVolume: function(category, value) {
+                this.volume[category] = Math.max(0, Math.min(1, value));
+            },
+            
+            playWithVolume: function(sound, category) {
+                const volume = this.volume.master * this.volume[category];
+                console.log(`Playing ${sound} at volume ${volume}`);
+            }
+        };
         
         // Character definitions with special attacks
         const characters = [
@@ -755,7 +1083,12 @@
             isUsingSpecial: false,
             isLocalPlayer: true,
             stunned: false,
-            stunTimer: 0
+            stunTimer: 0,
+            combo: { count: 0, timer: 0, multiplier: 1 },
+            level: 1,
+            experience: 0,
+            expToNextLevel: 100,
+            wins: 0
         };
         
         let player2 = {
@@ -784,7 +1117,8 @@
             isUsingSpecial: false,
             isLocalPlayer: false,
             stunned: false,
-            stunTimer: 0
+            stunTimer: 0,
+            combo: { count: 0, timer: 0, multiplier: 1 }
         };
         
         function createEnemy(x = 600, difficulty = 'normal') {
@@ -812,7 +1146,8 @@
                 slowed: false,
                 slowTimer: 0,
                 stunned: false,
-                stunTimer: 0
+                stunTimer: 0,
+                aiEnabled: true
             };
             
             // Apply difficulty modifiers
@@ -826,34 +1161,26 @@
             return enemy;
         }
         
-        function createParticle(x, y, type = 'death') {
-            const particle = {
-                x: x,
-                y: y,
-                velocityX: (Math.random() - 0.5) * 8,
-                velocityY: (Math.random() - 0.5) * 8,
-                size: Math.random() * 5 + 2,
-                life: 1.0,
-                decay: 0.02,
-                color: type === 'death' ? '#ff4444' : '#44ff44',
-                type: type
+        function createPowerUp(x, y, type) {
+            return {
+                x: x, y: y, width: 20, height: 20,
+                type: type, // 'health', 'speed', 'damage', 'charge'
+                collected: false,
+                color: type === 'health' ? '#ff4444' : 
+                       type === 'speed' ? '#44ff44' : 
+                       type === 'damage' ? '#4444ff' : '#ffff00'
             };
-            
-            if (type === 'spawn') {
-                particle.velocityX *= 0.3;
-                particle.velocityY *= 0.3;
-                particle.decay = 0.01;
-            }
-            return particle;
         }
-        
-        const gravity = 0.8;
-        const groundY = 300;
         
         // Input handling
         const keys = {};
         document.addEventListener('keydown', (e) => {
             keys[e.key.toLowerCase()] = true;
+            
+            // Debug toggle
+            if (e.key === 'F1') {
+                DEBUG.toggle();
+            }
         });
         document.addEventListener('keyup', (e) => {
             keys[e.key.toLowerCase()] = false;
@@ -1056,42 +1383,41 @@
             ctx.strokeRect(x, y, barWidth, barHeight);
             
             // Health fill
-            const healthPercent = enemy.health / enemy.maxHealth;
+            const healthPercent = Math.max(0, enemy.health / enemy.maxHealth);
             ctx.fillStyle = healthPercent > 0.5 ? '#44ff44' : healthPercent > 0.25 ? '#ffaa00' : '#ff4444';
             ctx.fillRect(x + 1, y + 1, (barWidth - 2) * healthPercent, barHeight - 2);
         }
         
-        function drawParticles() {
-            particles.forEach((particle, index) => {
-                ctx.save();
-                ctx.globalAlpha = particle.life;
-                ctx.fillStyle = particle.color;
-                ctx.beginPath();
-                ctx.arc(particle.x, particle.y, particle.size, 0, Math.PI * 2);
-                ctx.fill();
-                ctx.restore();
-                
-                // Update particle
-                particle.x += particle.velocityX;
-                particle.y += particle.velocityY;
-                particle.life -= particle.decay;
-                particle.velocityY += 0.2; // gravity
-                
-                if (particle.life <= 0) {
-                    particles.splice(index, 1);
-                }
-            });
+        function drawPowerUp(powerUp) {
+            if (powerUp.collected) return;
+            ctx.save();
+            ctx.fillStyle = powerUp.color;
+            ctx.beginPath();
+            ctx.arc(powerUp.x + powerUp.width/2, powerUp.y + powerUp.height/2, powerUp.width/2, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Add glow effect
+            ctx.shadowColor = powerUp.color;
+            ctx.shadowBlur = 10;
+            ctx.fill();
+            ctx.restore();
         }
         
         function createDeathEffect(x, y) {
-            for (let i = 0; i < 20; i++) {
-                particles.push(createParticle(x, y, 'death'));
+            for (let i = 0; i < CONFIG.PARTICLE_COUNT.DEATH_EFFECT; i++) {
+                particlePool.create(x, y, 'death');
             }
         }
         
         function createSpawnEffect(x, y) {
+            for (let i = 0; i < CONFIG.PARTICLE_COUNT.SPAWN_EFFECT; i++) {
+                particlePool.create(x, y, 'spawn');
+            }
+        }
+        
+        function createPowerUpEffect(x, y) {
             for (let i = 0; i < 15; i++) {
-                particles.push(createParticle(x, y, 'spawn'));
+                particlePool.create(x, y, 'powerup');
             }
         }
         
@@ -1100,6 +1426,7 @@
             document.getElementById('startScreen').style.display = 'none';
             document.getElementById('gameOver').style.display = 'none';
             document.getElementById('characterSelection').style.display = 'block';
+            currentGameState = GameState.CHARACTER_SELECT;
             
             const grid = document.getElementById('charactersGrid');
             grid.innerHTML = '';
@@ -1293,16 +1620,19 @@
             }
             document.getElementById('characterSelection').style.display = 'none';
             document.getElementById('modeSelection').style.display = 'block';
+            currentGameState = GameState.MODE_SELECT;
         }
         
         function showDifficultySelection() {
             document.getElementById('modeSelection').style.display = 'none';
             document.getElementById('difficultySelection').style.display = 'block';
+            currentGameState = GameState.DIFFICULTY_SELECT;
         }
         
         function enterOnlineMode() {
             document.getElementById('modeSelection').style.display = 'none';
             document.getElementById('onlineLobby').style.display = 'block';
+            currentGameState = GameState.ONLINE_LOBBY;
             connectToServer();
         }
         
@@ -1313,76 +1643,82 @@
             }
             document.getElementById('onlineLobby').style.display = 'none';
             document.getElementById('modeSelection').style.display = 'block';
+            currentGameState = GameState.MODE_SELECT;
             updateConnectionStatus(false);
         }
         
         function connectToServer() {
-            socket = io();
-            
-            socket.on('connect', () => {
-                updateConnectionStatus(true);
-                document.getElementById('lobbyStatus').textContent = 'Connected! Finding match...';
-                socket.emit('findMatch');
-            });
-            
-            socket.on('disconnect', () => {
-                updateConnectionStatus(false);
-            });
-            
-            socket.on('matchFound', (data) => {
-                roomId = data.roomId;
-                isPlayer1 = data.isPlayer1;
-                document.getElementById('lobbyStatus').textContent = 'Match found! Starting game...';
-                setTimeout(() => {
-                    document.getElementById('onlineLobby').style.display = 'none';
-                    startOnlineGame();
-                }, 1000);
-            });
-            
-            socket.on('playerJoined', (data) => {
-                if (data.playerId !== socket.id) {
-                    player2Data = data;
-                }
-            });
-            
-            socket.on('gameState', (data) => {
-                if (data.playerId !== socket.id) {
-                    // Update opponent state
-                    if (isPlayer1) {
-                        player2.x = data.x;
-                        player2.y = data.y;
-                        player2.velocityX = data.velocityX;
-                        player2.velocityY = data.velocityY;
-                        player2.facing = data.facing;
-                        player2.isAttacking = data.isAttacking;
-                        player2.attackType = data.attackType;
-                        player2.health = data.health;
-                        player2.isUsingSpecial = data.isUsingSpecial;
-                    } else {
-                        player.x = data.x;
-                        player.y = data.y;
-                        player.velocityX = data.velocityX;
-                        player.velocityY = data.velocityY;
-                        player.facing = data.facing;
-                        player.isAttacking = data.isAttacking;
-                        player.attackType = data.attackType;
-                        player.health = data.health;
-                        player.isUsingSpecial = data.isUsingSpecial;
+            try {
+                socket = io();
+                
+                socket.on('connect', () => {
+                    updateConnectionStatus(true);
+                    document.getElementById('lobbyStatus').textContent = 'Connected! Finding match...';
+                    socket.emit('findMatch');
+                });
+                
+                socket.on('disconnect', () => {
+                    updateConnectionStatus(false);
+                });
+                
+                socket.on('matchFound', (data) => {
+                    roomId = data.roomId;
+                    isPlayer1 = data.isPlayer1;
+                    document.getElementById('lobbyStatus').textContent = 'Match found! Starting game...';
+                    setTimeout(() => {
+                        document.getElementById('onlineLobby').style.display = 'none';
+                        startOnlineGame();
+                    }, 1000);
+                });
+                
+                socket.on('playerJoined', (data) => {
+                    if (data.playerId !== socket.id) {
+                        player2Data = data;
                     }
-                }
-            });
-            
-            socket.on('specialAttack', (data) => {
-                if (data.playerId !== socket.id) {
-                    // Execute opponent's special attack
-                    const opponent = isPlayer1 ? player2 : player;
-                    executeSpecialAttack(data.attackType, opponent);
-                }
-            });
-            
-            socket.on('playerDisconnected', () => {
-                endGame('Player Disconnected', 'Your opponent left the game');
-            });
+                });
+                
+                socket.on('gameState', (data) => {
+                    if (data.playerId !== socket.id) {
+                        // Update opponent state
+                        if (isPlayer1) {
+                            player2.x = data.x;
+                            player2.y = data.y;
+                            player2.velocityX = data.velocityX;
+                            player2.velocityY = data.velocityY;
+                            player2.facing = data.facing;
+                            player2.isAttacking = data.isAttacking;
+                            player2.attackType = data.attackType;
+                            player2.health = data.health;
+                            player2.isUsingSpecial = data.isUsingSpecial;
+                        } else {
+                            player.x = data.x;
+                            player.y = data.y;
+                            player.velocityX = data.velocityX;
+                            player.velocityY = data.velocityY;
+                            player.facing = data.facing;
+                            player.isAttacking = data.isAttacking;
+                            player.attackType = data.attackType;
+                            player.health = data.health;
+                            player.isUsingSpecial = data.isUsingSpecial;
+                        }
+                    }
+                });
+                
+                socket.on('specialAttack', (data) => {
+                    if (data.playerId !== socket.id) {
+                        // Execute opponent's special attack
+                        const opponent = isPlayer1 ? player2 : player;
+                        executeSpecialAttack(data.attackType, opponent);
+                    }
+                });
+                
+                socket.on('playerDisconnected', () => {
+                    endGame('Player Disconnected', 'Your opponent left the game');
+                });
+            } catch (error) {
+                console.error('Socket connection error:', error);
+                endGame('Connection Error', 'Failed to connect to server');
+            }
         }
         
         function updateConnectionStatus(connected) {
@@ -1401,12 +1737,15 @@
             if (player.charge < player.maxCharge || player.specialCooldown > 0) return;
             player.isUsingSpecial = true;
             player.charge = 0;
-            player.specialCooldown = 180; // 3 seconds at 60fps
+            player.specialCooldown = CONFIG.SPECIAL_COOLDOWN;
+            specialAttackCount++;
             
             // Send to server if online
             if (isOnlineMode && socket) {
                 socket.emit('specialAttack', { roomId: roomId, attackType: selectedCharacter.specialAttack });
             }
+            
+            SoundMixer.playWithVolume('special', 'effects');
             
             switch(selectedCharacter.specialAttack) {
                 case 'groundSlam':
@@ -1459,21 +1798,33 @@
         
         function groundSlam() {
             // Create shockwave effect
-            for (let i = 0; i < 30; i++) {
-                particles.push(createParticle(player.x + player.width/2, player.y + player.height, 'death'));
+            for (let i = 0; i < CONFIG.PARTICLE_COUNT.GROUND_SLAM; i++) {
+                particlePool.create(player.x + player.width/2, player.y + player.height, 'death');
             }
+            
+            SoundMixer.playWithVolume('ground_slam', 'effects');
+            screenShake.shake(10, 20);
             
             // Damage all enemies in range
             const targets = isOnlineMode ? [player2] : enemies;
             targets.forEach(target => {
-                if (target.health > 0) {
+                if (target.alive && target.health > 0) {
                     const distance = Math.abs(target.x - player.x);
                     if (distance < 150) {
                         target.health -= 40;
+                        target.health = Math.max(0, target.health);
                         target.stunned = true;
-                        target.stunTimer = 120; // 2 seconds at 60fps
+                        target.stunTimer = CONFIG.STUN_DURATION;
                         target.velocityY = -15; // Launch enemies
-                        createDeathEffect(target.x + target.width/2, target.y + target.height/2);
+                        
+                        if (target.health <= 0 && target.alive) {
+                            target.alive = false;
+                            createDeathEffect(target.x + target.width/2, target.y + target.height/2);
+                            awardExperience(20, true);
+                        } else {
+                            createDeathEffect(target.x + target.width/2, target.y + target.height/2);
+                            awardExperience(5);
+                        }
                     }
                 }
             });
@@ -1481,18 +1832,27 @@
         
         function executeGroundSlam(target) {
             // Create shockwave effect
-            for (let i = 0; i < 30; i++) {
-                particles.push(createParticle(target.x + target.width/2, target.y + target.height, 'death'));
+            for (let i = 0; i < CONFIG.PARTICLE_COUNT.GROUND_SLAM; i++) {
+                particlePool.create(target.x + target.width/2, target.y + target.height, 'death');
             }
+            
+            SoundMixer.playWithVolume('ground_slam', 'effects');
+            screenShake.shake(10, 20);
             
             // Damage player
             const distance = Math.abs(player.x - target.x);
             if (distance < 150) {
                 player.health -= 40;
+                player.health = Math.max(0, player.health);
                 player.stunned = true;
-                player.stunTimer = 120; // 2 seconds at 60fps
+                player.stunTimer = CONFIG.STUN_DURATION;
                 player.velocityY = -15;
-                createDeathEffect(player.x + player.width/2, player.y + player.height/2);
+                
+                if (player.health <= 0) {
+                    createDeathEffect(player.x + player.width/2, player.y + player.height/2);
+                } else {
+                    createDeathEffect(player.x + player.width/2, player.y + player.height/2);
+                }
             }
         }
         
@@ -1506,10 +1866,12 @@
                 setTimeout(() => {
                     const trailX = startX + (dashDistance * i / 10);
                     for (let j = 0; j < 5; j++) {
-                        particles.push(createParticle(trailX + player.width/2, player.y + player.height/2, 'spawn'));
+                        particlePool.create(trailX + player.width/2, player.y + player.height/2, 'spawn');
                     }
                 }, i * 20);
             }
+            
+            SoundMixer.playWithVolume('shadow_dash', 'effects');
             
             // Teleport and damage enemies along the path
             player.x = endX;
@@ -1518,9 +1880,21 @@
             
             const targets = isOnlineMode ? [player2] : enemies;
             targets.forEach(target => {
-                if (target.health > 0 && ((player.facing === 'right' && target.x > startX && target.x < endX) || (player.facing === 'left' && target.x < startX && target.x > endX))) {
+                if (target.alive && target.health > 0 && 
+                    ((player.facing === 'right' && target.x > startX && target.x < endX) || 
+                     (player.facing === 'left' && target.x < startX && target.x > endX))) {
                     target.health -= 30;
-                    createDeathEffect(target.x + target.width/2, target.y + target.height/2);
+                    target.health = Math.max(0, target.health);
+                    target.velocityY = -15;
+                    
+                    if (target.health <= 0 && target.alive) {
+                        target.alive = false;
+                        createDeathEffect(target.x + target.width/2, target.y + target.height/2);
+                        awardExperience(20, true);
+                    } else {
+                        createDeathEffect(target.x + target.width/2, target.y + target.height/2);
+                        awardExperience(5);
+                    }
                 }
             });
         }
@@ -1535,21 +1909,32 @@
                 setTimeout(() => {
                     const trailX = startX + (dashDistance * i / 10);
                     for (let j = 0; j < 5; j++) {
-                        particles.push(createParticle(trailX + target.width/2, target.y + target.height/2, 'spawn'));
+                        particlePool.create(trailX + target.width/2, target.y + target.height/2, 'spawn');
                     }
                 }, i * 20);
             }
             
+            SoundMixer.playWithVolume('shadow_dash', 'effects');
+            
             // Damage player if in path
-            if ((target.facing === 'right' && player.x > startX && player.x < endX) || (target.facing === 'left' && player.x < startX && player.x > endX)) {
+            if ((target.facing === 'right' && player.x > startX && player.x < endX) || 
+                (target.facing === 'left' && player.x < startX && player.x > endX)) {
                 player.health -= 30;
+                player.health = Math.max(0, player.health);
                 player.velocityY = -15;
-                createDeathEffect(player.x + player.width/2, player.y + player.height/2);
+                
+                if (player.health <= 0) {
+                    createDeathEffect(player.x + player.width/2, player.y + player.height/2);
+                } else {
+                    createDeathEffect(player.x + player.width/2, player.y + player.height/2);
+                }
             }
         }
         
         function multiShot() {
             const angles = [0, 45, 90, 135, 180, 225, 270, 315];
+            SoundMixer.playWithVolume('multi_shot', 'effects');
+            
             angles.forEach(angle => {
                 const rad = angle * Math.PI / 180;
                 const projectile = {
@@ -1579,14 +1964,24 @@
                     // Check collision with targets
                     const targets = isOnlineMode ? [player2] : enemies;
                     targets.forEach(target => {
-                        if (target.health > 0) {
+                        if (target.alive && target.health > 0) {
                             const distance = Math.sqrt(
                                 Math.pow(target.x + target.width/2 - projectile.x, 2) +
                                 Math.pow(target.y + target.height/2 - projectile.y, 2)
                             );
                             if (distance < 20) {
                                 target.health -= projectile.damage;
-                                createDeathEffect(target.x + target.width/2, target.y + target.height/2);
+                                target.health = Math.max(0, target.health);
+                                
+                                if (target.health <= 0 && target.alive) {
+                                    target.alive = false;
+                                    createDeathEffect(target.x + target.width/2, target.y + target.height/2);
+                                    awardExperience(20, true);
+                                } else {
+                                    createDeathEffect(target.x + target.width/2, target.y + target.height/2);
+                                    awardExperience(5);
+                                }
+                                projectile.life = 0; // Destroy projectile on hit
                             }
                         }
                     });
@@ -1602,6 +1997,8 @@
         
         function executeMultiShot(target) {
             const angles = [0, 45, 90, 135, 180, 225, 270, 315];
+            SoundMixer.playWithVolume('multi_shot', 'effects');
+            
             angles.forEach(angle => {
                 const rad = angle * Math.PI / 180;
                 const projectile = {
@@ -1635,7 +2032,14 @@
                     );
                     if (distance < 20) {
                         player.health -= projectile.damage;
-                        createDeathEffect(player.x + player.width/2, player.y + player.height/2);
+                        player.health = Math.max(0, player.health);
+                        
+                        if (player.health <= 0) {
+                            createDeathEffect(player.x + player.width/2, player.y + player.height/2);
+                        } else {
+                            createDeathEffect(player.x + player.width/2, player.y + player.height/2);
+                        }
+                        projectile.life = 0; // Destroy projectile on hit
                     }
                     
                     if (projectile.life > 0) {
@@ -1653,15 +2057,17 @@
                 const angle = (i / 20) * Math.PI * 2;
                 const x = player.x + player.width/2 + Math.cos(angle) * 100;
                 const y = player.y + player.height/2 + Math.sin(angle) * 100;
-                particles.push(createParticle(x, y, 'spawn'));
+                particlePool.create(x, y, 'spawn');
             }
+            
+            SoundMixer.playWithVolume('time_field', 'effects');
             
             // Slow all enemies
             const targets = isOnlineMode ? [player2] : enemies;
             targets.forEach(target => {
-                if (target.health > 0) {
+                if (target.alive && target.health > 0) {
                     target.slowed = true;
-                    target.slowTimer = 300; // 5 seconds
+                    target.slowTimer = CONFIG.SLOW_DURATION;
                     target.speed *= 0.3;
                 }
             });
@@ -1673,31 +2079,44 @@
                 const angle = (i / 20) * Math.PI * 2;
                 const x = target.x + target.width/2 + Math.cos(angle) * 100;
                 const y = target.y + target.height/2 + Math.sin(angle) * 100;
-                particles.push(createParticle(x, y, 'spawn'));
+                particlePool.create(x, y, 'spawn');
             }
+            
+            SoundMixer.playWithVolume('time_field', 'effects');
             
             // Slow player
             player.slowed = true;
-            player.slowTimer = 300;
+            player.slowTimer = CONFIG.SLOW_DURATION;
             player.speed *= 0.3;
         }
         
         function uppercut() {
             // Create upward effect
             for (let i = 0; i < 15; i++) {
-                particles.push(createParticle(player.x + player.width/2, player.y, 'spawn'));
+                particlePool.create(player.x + player.width/2, player.y, 'spawn');
             }
+            
+            SoundMixer.playWithVolume('uppercut', 'effects');
             
             // Damage and launch nearby enemies
             const targets = isOnlineMode ? [player2] : enemies;
             targets.forEach(target => {
-                if (target.health > 0) {
+                if (target.alive && target.health > 0) {
                     const distance = Math.abs(target.x - player.x);
                     if (distance < 80) {
                         target.health -= 35;
+                        target.health = Math.max(0, target.health);
                         target.velocityY = -20; // Strong launch
                         target.velocityX = (target.x < player.x ? -10 : 10);
-                        createDeathEffect(target.x + target.width/2, target.y + target.height/2);
+                        
+                        if (target.health <= 0 && target.alive) {
+                            target.alive = false;
+                            createDeathEffect(target.x + target.width/2, target.y + target.height/2);
+                            awardExperience(20, true);
+                        } else {
+                            createDeathEffect(target.x + target.width/2, target.y + target.height/2);
+                            awardExperience(5);
+                        }
                     }
                 }
             });
@@ -1706,16 +2125,24 @@
         function executeUppercut(target) {
             // Create upward effect
             for (let i = 0; i < 15; i++) {
-                particles.push(createParticle(target.x + target.width/2, target.y, 'spawn'));
+                particlePool.create(target.x + target.width/2, target.y, 'spawn');
             }
+            
+            SoundMixer.playWithVolume('uppercut', 'effects');
             
             // Damage and launch player
             const distance = Math.abs(player.x - target.x);
             if (distance < 80) {
                 player.health -= 35;
+                player.health = Math.max(0, player.health);
                 player.velocityY = -20;
                 player.velocityX = (player.x < target.x ? -10 : 10);
-                createDeathEffect(player.x + player.width/2, player.y + player.height/2);
+                
+                if (player.health <= 0) {
+                    createDeathEffect(player.x + player.width/2, player.y + player.height/2);
+                } else {
+                    createDeathEffect(player.x + player.width/2, player.y + player.height/2);
+                }
             }
         }
         
@@ -1724,6 +2151,8 @@
             const beamLength = canvas.width;
             const startX = player.facing === 'right' ? player.x + player.width : player.x;
             const endX = player.facing === 'right' ? canvas.width : 0;
+            
+            SoundMixer.playWithVolume('laser_beam', 'effects');
             
             // Animate laser sweep
             let sweepProgress = 0;
@@ -1744,19 +2173,28 @@
                 for (let i = 0; i < 3; i++) {
                     const x = startX + (endX - startX) * sweepProgress;
                     const y = player.y + 20 + Math.random() * beamWidth;
-                    particles.push(createParticle(x, y, 'death'));
+                    particlePool.create(x, y, 'death');
                 }
                 
                 // Check collision with targets
                 const targets = isOnlineMode ? [player2] : enemies;
                 targets.forEach(target => {
-                    if (target.health > 0) {
+                    if (target.alive && target.health > 0) {
                         const targetCenterX = target.x + target.width/2;
                         const targetCenterY = target.y + target.height/2;
                         if (targetCenterX >= startX && targetCenterX <= startX + (endX - startX) * sweepProgress && 
                             targetCenterY >= player.y + 20 && targetCenterY <= player.y + 20 + beamWidth) {
                             target.health -= 2; // Continuous damage
-                            createDeathEffect(target.x + target.width/2, target.y + target.height/2);
+                            target.health = Math.max(0, target.health);
+                            
+                            if (target.health <= 0 && target.alive) {
+                                target.alive = false;
+                                createDeathEffect(target.x + target.width/2, target.y + target.height/2);
+                                awardExperience(20, true);
+                            } else {
+                                createDeathEffect(target.x + target.width/2, target.y + target.height/2);
+                                awardExperience(1);
+                            }
                         }
                     }
                 });
@@ -1772,6 +2210,8 @@
             const beamLength = canvas.width;
             const startX = target.facing === 'right' ? target.x + target.width : target.x;
             const endX = target.facing === 'right' ? canvas.width : 0;
+            
+            SoundMixer.playWithVolume('laser_beam', 'effects');
             
             // Animate laser sweep
             let sweepProgress = 0;
@@ -1792,7 +2232,7 @@
                 for (let i = 0; i < 3; i++) {
                     const x = startX + (endX - startX) * sweepProgress;
                     const y = target.y + 20 + Math.random() * beamWidth;
-                    particles.push(createParticle(x, y, 'death'));
+                    particlePool.create(x, y, 'death');
                 }
                 
                 // Check collision with player
@@ -1801,7 +2241,13 @@
                 if (playerCenterX >= startX && playerCenterX <= startX + (endX - startX) * sweepProgress && 
                     playerCenterY >= target.y + 20 && playerCenterY <= target.y + 20 + beamWidth) {
                     player.health -= 2; // Continuous damage
-                    createDeathEffect(player.x + player.width/2, player.y + player.height/2);
+                    player.health = Math.max(0, player.health);
+                    
+                    if (player.health <= 0) {
+                        createDeathEffect(player.x + player.width/2, player.y + player.height/2);
+                    } else {
+                        createDeathEffect(player.x + player.width/2, player.y + player.height/2);
+                    }
                 }
                 
                 requestAnimationFrame(animateLaser);
@@ -1813,6 +2259,15 @@
         // Update functions
         function updatePlayer(character) {
             if (isRespawning || !character.isLocalPlayer) return;
+            
+            // Update combo timer
+            if (character.combo && character.combo.timer > 0) {
+                character.combo.timer--;
+            } else if (character.combo) {
+                character.combo.count = 0;
+                character.combo.multiplier = 1;
+                updateComboDisplay();
+            }
             
             // Handle stun effect
             if (character.stunned) {
@@ -1835,8 +2290,9 @@
             }
             
             // Jump
-            if (keys['w'] && character.y >= groundY) {
+            if (keys['w'] && character.y >= CONFIG.GROUND_Y) {
                 character.velocityY = -character.jumpPower;
+                SoundMixer.playWithVolume('jump', 'effects');
             }
             
             // Special attack
@@ -1852,6 +2308,8 @@
                     character.attackCooldown = 30;
                     character.attackFrame = 0;
                     
+                    SoundMixer.playWithVolume('punch', 'effects');
+                    
                     // Add charge (1.5x rate)
                     if (character.charge < character.maxCharge) {
                         character.charge += 15;
@@ -1860,8 +2318,9 @@
                     // Check collision with all targets
                     const targets = isOnlineMode ? [player2] : enemies;
                     targets.forEach(target => {
-                        if (target.health > 0) {
-                            checkAttackCollision(character, target, 15 * character.damageMultiplier);
+                        if (target.alive && target.health > 0) {
+                            const damageMultiplier = character.combo && character.combo.multiplier ? character.combo.multiplier : 1;
+                            checkAttackCollision(character, target, 15 * character.damageMultiplier * damageMultiplier);
                         }
                     });
                 } else if (keys['f']) {
@@ -1869,6 +2328,8 @@
                     character.attackType = 'kick';
                     character.attackCooldown = 40;
                     character.attackFrame = 0;
+                    
+                    SoundMixer.playWithVolume('kick', 'effects');
                     
                     // Add charge (1.5x rate)
                     if (character.charge < character.maxCharge) {
@@ -1878,8 +2339,9 @@
                     // Check collision with all targets
                     const targets = isOnlineMode ? [player2] : enemies;
                     targets.forEach(target => {
-                        if (target.health > 0) {
-                            checkAttackCollision(character, target, 20 * character.damageMultiplier);
+                        if (target.alive && target.health > 0) {
+                            const damageMultiplier = character.combo && character.combo.multiplier ? character.combo.multiplier : 1;
+                            checkAttackCollision(character, target, 20 * character.damageMultiplier * damageMultiplier);
                         }
                     });
                 }
@@ -1898,15 +2360,15 @@
             }
             
             // Physics
-            character.velocityY += gravity;
+            character.velocityY += CONFIG.GRAVITY;
             character.x += character.velocityX;
             character.y += character.velocityY;
             
             // Boundaries
             if (character.x < 0) character.x = 0;
             if (character.x + character.width > canvas.width) character.x = canvas.width - character.width;
-            if (character.y > groundY) {
-                character.y = groundY;
+            if (character.y > CONFIG.GROUND_Y) {
+                character.y = CONFIG.GROUND_Y;
                 character.velocityY = 0;
             }
             
@@ -1953,6 +2415,9 @@
                 return; // Don't allow movement when stunned
             }
             
+            // Skip AI for training mode dummy
+            if (!enemy.aiEnabled) return;
+            
             // AI Decision Making
             if (enemy.aiCooldown <= 0) {
                 const distance = Math.abs(player.x - enemy.x);
@@ -1987,18 +2452,20 @@
                         enemy.attackType = 'punch';
                         enemy.attackCooldown = 35;
                         enemy.attackFrame = 0;
+                        SoundMixer.playWithVolume('enemy_punch', 'effects');
                         checkAttackCollision(enemy, player, 15 * (enemy.damageMultiplier || 1));
                     } else {
                         enemy.isAttacking = true;
                         enemy.attackType = 'kick';
                         enemy.attackCooldown = 45;
                         enemy.attackFrame = 0;
+                        SoundMixer.playWithVolume('enemy_kick', 'effects');
                         checkAttackCollision(enemy, player, 20 * (enemy.damageMultiplier || 1));
                     }
                 }
                 
                 // Jump decision
-                if (enemy.aiDecision < 0.1 && enemy.y >= groundY) {
+                if (enemy.aiDecision < 0.1 && enemy.y >= CONFIG.GROUND_Y) {
                     enemy.velocityY = -enemy.jumpPower;
                 }
                 
@@ -2008,15 +2475,15 @@
             }
             
             // Physics
-            enemy.velocityY += gravity;
+            enemy.velocityY += CONFIG.GRAVITY;
             enemy.x += enemy.velocityX;
             enemy.y += enemy.velocityY;
             
             // Boundaries
             if (enemy.x < 0) enemy.x = 0;
             if (enemy.x + enemy.width > canvas.width) enemy.x = canvas.width - enemy.width;
-            if (enemy.y > groundY) {
-                enemy.y = groundY;
+            if (enemy.y > CONFIG.GROUND_Y) {
+                enemy.y = CONFIG.GROUND_Y;
                 enemy.velocityY = 0;
             }
             
@@ -2037,9 +2504,25 @@
             if (distance < range && Math.abs(attacker.y - defender.y) < 50) {
                 defender.health -= damage;
                 defender.health = Math.max(0, defender.health);
-                if (defender.health <= 0 && defender !== player && defender !== player2) {
-                    defender.alive = false;
-                    createDeathEffect(defender.x + defender.width/2, defender.y + defender.height/2);
+                
+                // Update combo for attacker
+                if (defender.health > 0 && attacker.combo) {
+                    attacker.combo.count++;
+                    attacker.combo.timer = 120; // 2 seconds to continue combo
+                    attacker.combo.multiplier = 1 + (attacker.combo.count * 0.1); // 10% damage increase per combo
+                    updateComboDisplay();
+                    checkAchievements();
+                }
+                
+                // Proper death handling
+                if (defender.health <= 0 && defender.alive) {
+                    if (defender !== player && defender !== player2) {
+                        defender.alive = false;
+                        createDeathEffect(defender.x + defender.width/2, defender.y + defender.height/2);
+                        awardExperience(20, true);
+                    }
+                } else if (defender.health > 0) {
+                    awardExperience(5);
                 }
                 updateHealthBars();
                 
@@ -2047,7 +2530,105 @@
                 const knockback = attacker.facing === 'right' ? 10 : -10;
                 defender.velocityX = knockback;
                 defender.velocityY = -5;
+                
+                SoundMixer.playWithVolume('hit', 'effects');
             }
+        }
+        
+        function updatePowerUps() {
+            powerUps.forEach((powerUp, index) => {
+                if (!powerUp.collected) {
+                    // Simple collision detection
+                    const distance = Math.sqrt(
+                        Math.pow(player.x + player.width/2 - (powerUp.x + powerUp.width/2), 2) +
+                        Math.pow(player.y + player.height/2 - (powerUp.y + powerUp.height/2), 2)
+                    );
+                    
+                    if (distance < 30) {
+                        powerUp.collected = true;
+                        applyPowerUp(powerUp.type);
+                        createPowerUpEffect(powerUp.x + powerUp.width/2, powerUp.y + powerUp.height/2);
+                        powerUps.splice(index, 1);
+                    }
+                }
+            });
+        }
+        
+        function applyPowerUp(type) {
+            switch(type) {
+                case 'health':
+                    player.health = Math.min(player.maxHealth, player.health + 30);
+                    break;
+                case 'speed':
+                    player.speedBoost = true;
+                    const originalSpeed = player.speed;
+                    player.speed *= 1.5;
+                    setTimeout(() => {
+                        player.speed = originalSpeed;
+                        player.speedBoost = false;
+                    }, 5000);
+                    break;
+                case 'damage':
+                    player.damageBoost = true;
+                    const originalDamage = player.damageMultiplier;
+                    player.damageMultiplier *= 1.5;
+                    setTimeout(() => {
+                        player.damageMultiplier = originalDamage;
+                        player.damageBoost = false;
+                    }, 5000);
+                    break;
+                case 'charge':
+                    player.charge = Math.min(player.maxCharge, player.charge + 50);
+                    break;
+            }
+            updateHealthBars();
+        }
+        
+        function updateComboDisplay() {
+            const comboDisplay = document.getElementById('comboDisplay');
+            if (player.combo && player.combo.count > 1) {
+                comboDisplay.textContent = `COMBO: ${player.combo.count}x`;
+                comboDisplay.style.display = 'block';
+                // Add animation effect
+                comboDisplay.style.transform = 'scale(1.2)';
+                setTimeout(() => {
+                    comboDisplay.style.transform = 'scale(1)';
+                }, 200);
+            } else {
+                comboDisplay.style.display = 'none';
+            }
+        }
+        
+        function awardExperience(amount, isKill = false) {
+            player.experience += amount;
+            if (player.experience >= player.expToNextLevel) {
+                levelUp();
+            }
+            updateUI();
+        }
+        
+        function levelUp() {
+            player.level++;
+            player.experience -= player.expToNextLevel;
+            player.expToNextLevel = Math.floor(player.expToNextLevel * 1.5);
+            
+            // Stat increases
+            player.maxHealth += 10;
+            player.health = player.maxHealth;
+            player.damageMultiplier += 0.1;
+            
+            // Visual feedback
+            document.getElementById('levelDisplay').textContent = `Level ${player.level}`;
+            document.getElementById('levelDisplay').style.display = 'block';
+            setTimeout(() => {
+                document.getElementById('levelDisplay').style.display = 'none';
+            }, 3000);
+            
+            SoundMixer.playWithVolume('level_up', 'effects');
+        }
+        
+        function updateUI() {
+            document.getElementById('levelDisplay').textContent = `Level ${player.level}`;
         }
         
         function updateHealthBars() {
@@ -2066,6 +2647,12 @@
                 const aliveEnemies = enemies.filter(e => e.alive).length;
                 document.getElementById('currentWave').textContent = currentWave;
                 document.getElementById('enemiesLeft').textContent = aliveEnemies;
+            }
+            
+            // Update training mode UI
+            if (gameMode === 'training' && enemies.length > 0) {
+                const dummy = enemies[0];
+                document.getElementById('dummyHealth').textContent = `${Math.round((dummy.health / dummy.maxHealth) * 100)}%`;
             }
         }
         
@@ -2086,6 +2673,29 @@
                 const x = 600 + (i * 80); // Spread enemies out
                 enemies.push(createEnemy(x));
             }
+            
+            // Occasionally spawn power-ups
+            if (Math.random() < 0.3) {
+                const powerUpTypes = ['health', 'speed', 'damage', 'charge'];
+                const randomType = powerUpTypes[Math.floor(Math.random() * powerUpTypes.length)];
+                powerUps.push(createPowerUp(
+                    200 + Math.random() * 400,
+                    CONFIG.GROUND_Y - 30,
+                    randomType
+                ));
+            }
+        }
+        
+        function spawnEnemiesContinuously() {
+            if (gameMode === 'survival' && gameRunning) {
+                setTimeout(() => {
+                    if (gameRunning) {
+                        const x = Math.random() > 0.5 ? -50 : canvas.width + 50;
+                        enemies.push(createEnemy(x));
+                        spawnEnemiesContinuously();
+                    }
+                }, 3000 - Math.min(2500, currentWave * 100)); // Increase spawn rate over time
+            }
         }
         
         function respawnPlayer() {
@@ -2103,9 +2713,16 @@
             // Reset player
             player.health = player.maxHealth;
             player.x = 100;
-            player.y = groundY;
+            player.y = CONFIG.GROUND_Y;
             player.velocityX = 0;
             player.velocityY = 0;
+            player.stunned = false;
+            player.stunTimer = 0;
+            if (player.combo) {
+                player.combo.count = 0;
+                player.combo.multiplier = 1;
+            }
+            updateComboDisplay();
             
             // Create spawn effect
             createSpawnEffect(player.x + player.width/2, player.y + player.height/2);
@@ -2134,29 +2751,85 @@
                     let message = '';
                     if (gameMode === 'classic') {
                         message = gameDifficulty === 'hard' ? 'The Hard CPU was too strong!' : 'The CPU was too strong this time.';
+                        player.wins++;
                     } else if (isOnlineMode) {
                         message = 'You lost the match!';
+                    } else if (gameMode === 'survival') {
+                        const survivalTime = Math.floor((Date.now() - survivalStartTime) / 1000);
+                        message = `You survived ${survivalTime} seconds!`;
                     } else {
                         message = `You survived ${currentWave} wave${currentWave > 1 ? 's' : ''}!`;
                     }
                     endGame('Game Over', message);
                 }
             } else if (player2.health <= 0 && isOnlineMode) {
+                player.wins++;
                 endGame('You Win!', 'Congratulations! You defeated your opponent!');
             } else if (gameMode === 'classic' && enemies.length > 0 && enemies[0].health <= 0) {
+                player.wins++;
                 endGame('You Win!', 'Congratulations! You defeated the CPU!');
             }
         }
         
-        function gameLoop() {
+        function showAchievementNotification(achievement) {
+            const notification = document.getElementById('achievementNotification');
+            document.getElementById('achievementName').textContent = achievement.name;
+            notification.classList.add('show');
+            
+            setTimeout(() => {
+                notification.classList.remove('show');
+            }, 3000);
+            
+            SoundMixer.playWithVolume('achievement', 'effects');
+        }
+        
+        function checkAchievements() {
+            achievements.forEach(achievement => {
+                if (!achievement.unlocked) {
+                    switch(achievement.id) {
+                        case 'first_win':
+                            if (player.wins > 0) {
+                                achievement.unlocked = true;
+                                showAchievementNotification(achievement);
+                            }
+                            break;
+                        case 'combo_master':
+                            if (player.combo && player.combo.count >= 10) {
+                                achievement.unlocked = true;
+                                showAchievementNotification(achievement);
+                            }
+                            break;
+                        case 'specialist':
+                            if (specialAttackCount >= 50) {
+                                achievement.unlocked = true;
+                                showAchievementNotification(achievement);
+                            }
+                            break;
+                        case 'survivor':
+                            if (gameMode === 'survival' && (Date.now() - survivalStartTime) >= 300000) { // 5 minutes
+                                achievement.unlocked = true;
+                                showAchievementNotification(achievement);
+                            }
+                            break;
+                    }
+                }
+            });
+        }
+        
+        function gameLoop(timestamp) {
             if (!gameRunning) return;
+            
+            DEBUG.update(timestamp);
             
             // Clear canvas
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             
+            // Apply screen shake
+            screenShake.update();
+            
             // Draw ground
             ctx.fillStyle = '#8B4513';
-            ctx.fillRect(0, groundY + 60, canvas.width, 40);
+            ctx.fillRect(0, CONFIG.GROUND_Y + 60, canvas.width, 40);
             
             // Update and draw players
             updatePlayer(player);
@@ -2175,15 +2848,25 @@
                     if (enemy.alive) {
                         drawStickman(enemy, 'Enemy');
                         // Draw health bars only in wave mode
-                        if (gameMode === 'wave') {
+                        if (gameMode === 'wave' || gameMode === 'training') {
                             drawEnemyHealthBar(enemy);
                         }
                     }
                 });
+                
+                // Update and draw power-ups
+                powerUps.forEach(powerUp => {
+                    drawPowerUp(powerUp);
+                });
+                updatePowerUps();
             }
             
-            // Draw particles
-            drawParticles();
+            // Update and draw particles
+            particlePool.update();
+            particlePool.draw();
+            
+            // Restore screen shake
+            screenShake.restore();
             
             // Check wave completion
             checkWaveComplete();
@@ -2191,7 +2874,48 @@
             // Check game over
             checkGameOver();
             
+            // Check achievements periodically
+            if (Math.floor(timestamp / 1000) % 5 === 0) {
+                checkAchievements();
+            }
+            
             animationId = requestAnimationFrame(gameLoop);
+        }
+        
+        function resetGame() {
+            // Reset all game objects to initial state
+            player = {
+                x: 100, y: 300, width: 40, height: 60,
+                velocityX: 0, velocityY: 0, speed: 5, jumpPower: 15,
+                health: 100, maxHealth: 100, isAttacking: false,
+                attackType: null, attackCooldown: 0, attackFrame: 0,
+                facing: 'right', color: '#4CAF50', accessories: [],
+                damageMultiplier: 1.0, attackRange: 60, charge: 0,
+                maxCharge: 100, specialCooldown: 0, isUsingSpecial: false,
+                isLocalPlayer: true, stunned: false, stunTimer: 0,
+                combo: { count: 0, timer: 0, multiplier: 1 },
+                level: 1, experience: 0, expToNextLevel: 100, wins: player.wins || 0
+            };
+            
+            player2 = {
+                x: 600, y: 300, width: 40, height: 60,
+                velocityX: 0, velocityY: 0, speed: 5, jumpPower: 15,
+                health: 100, maxHealth: 100, isAttacking: false,
+                attackType: null, attackCooldown: 0, attackFrame: 0,
+                facing: 'left', color: '#4444ff', accessories: [],
+                damageMultiplier: 1.0, attackRange: 60, charge: 0,
+                maxCharge: 100, specialCooldown: 0, isUsingSpecial: false,
+                isLocalPlayer: false, stunned: false, stunTimer: 0,
+                combo: { count: 0, timer: 0, multiplier: 1 }
+            };
+            
+            enemies = [];
+            powerUps = [];
+            particlePool.clear();
+            currentWave = 1;
+            playerLives = 3;
+            isRespawning = false;
+            specialAttackCount = 0;
         }
         
         function startGame(mode, difficulty = 'normal') {
@@ -2206,24 +2930,42 @@
             }
             
             gameRunning = true;
+            currentGameState = GameState.PLAYING;
             
             // Reset game state
-            playerLives = 3;
-            currentWave = 1;
-            particles = [];
+            resetGame();
             
             // Setup UI based on mode
             if (mode === 'classic') {
                 document.getElementById('waveInfo').style.display = 'none';
                 document.getElementById('cpuHealthContainer').style.display = 'flex';
                 document.getElementById('player2Info').style.display = 'none';
+                document.getElementById('trainingModeUI').style.display = 'none';
                 enemies = [createEnemy(600, difficulty)];
-            } else {
+            } else if (mode === 'wave') {
                 document.getElementById('waveInfo').style.display = 'flex';
                 document.getElementById('cpuHealthContainer').style.display = 'none';
                 document.getElementById('player2Info').style.display = 'none';
+                document.getElementById('trainingModeUI').style.display = 'none';
                 updateLivesDisplay();
                 spawnWave();
+            } else if (mode === 'survival') {
+                document.getElementById('waveInfo').style.display = 'none';
+                document.getElementById('cpuHealthContainer').style.display = 'none';
+                document.getElementById('player2Info').style.display = 'none';
+                document.getElementById('trainingModeUI').style.display = 'none';
+                survivalStartTime = Date.now();
+                spawnEnemiesContinuously();
+            } else if (mode === 'training') {
+                document.getElementById('waveInfo').style.display = 'none';
+                document.getElementById('cpuHealthContainer').style.display = 'none';
+                document.getElementById('player2Info').style.display = 'none';
+                document.getElementById('trainingModeUI').style.display = 'block';
+                const dummy = createEnemy(400, 'normal');
+                dummy.aiEnabled = false; // Dummy doesn't fight back
+                dummy.maxHealth = 999999; // Nearly invincible
+                dummy.health = 999999;
+                enemies.push(dummy);
             }
             
             // Apply selected character stats to player
@@ -2241,16 +2983,16 @@
             
             // Reset player position
             player.x = 100;
-            player.y = groundY;
+            player.y = CONFIG.GROUND_Y;
             player.velocityX = 0;
             player.velocityY = 0;
             player.isAttacking = false;
             player.attackType = null;
             player.attackCooldown = 0;
             player.attackFrame = 0;
-            isRespawning = false;
             
             updateHealthBars();
+            updateUI();
             gameLoop();
         }
         
@@ -2258,14 +3000,16 @@
             gameMode = 'online';
             isOnlineMode = true;
             gameRunning = true;
+            currentGameState = GameState.PLAYING;
             
             // Reset game state
-            particles = [];
+            resetGame();
             
             // Setup UI for online mode
             document.getElementById('waveInfo').style.display = 'none';
             document.getElementById('cpuHealthContainer').style.display = 'none';
             document.getElementById('player2Info').style.display = 'flex';
+            document.getElementById('trainingModeUI').style.display = 'none';
             
             // Apply selected character stats to players
             player.color = selectedCharacter.color;
@@ -2294,7 +3038,7 @@
             
             // Reset player positions
             player.x = isPlayer1 ? 100 : 600;
-            player.y = groundY;
+            player.y = CONFIG.GROUND_Y;
             player.velocityX = 0;
             player.velocityY = 0;
             player.isAttacking = false;
@@ -2304,10 +3048,8 @@
             player.facing = isPlayer1 ? 'right' : 'left';
             player.isLocalPlayer = true;
             
-            isRespawning = false;
-            
             player2.x = isPlayer1 ? 600 : 100;
-            player2.y = groundY;
+            player2.y = CONFIG.GROUND_Y;
             player2.velocityX = 0;
             player2.velocityY = 0;
             player2.isAttacking = false;
@@ -2318,11 +3060,14 @@
             player2.isLocalPlayer = false;
             
             updateHealthBars();
+            updateUI();
             gameLoop();
         }
         
         function endGame(title, message) {
             gameRunning = false;
+            currentGameState = GameState.GAME_OVER;
+            
             if (socket) {
                 socket.disconnect();
                 socket = null;
@@ -2332,10 +3077,17 @@
             document.getElementById('gameOverMessage').textContent = message;
             document.getElementById('gameOver').style.display = 'block';
             updateConnectionStatus(false);
+            document.getElementById('trainingModeUI').style.display = 'none';
         }
         
         // Initialize health bars
         updateHealthBars();
+        
+        // Load sounds
+        SoundMixer.playWithVolume = function(sound, category) {
+            console.log(`Playing ${sound} (${category})`);
+            // In a real implementation, this would play actual audio files
+        };
     </script>
 </body>
 </html>
