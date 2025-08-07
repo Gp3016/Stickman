@@ -58,7 +58,7 @@ io.on('connection', (socket) => {
             // Notify players about each other
             socket.to(roomId).emit('playerJoined', {
                 playerId: socket.id,
-                character: null // Will be sent when game starts
+                character: null
             });
             
             socket.emit('playerJoined', {
@@ -99,6 +99,47 @@ io.on('connection', (socket) => {
         }
     });
     
+    // Handle character selection
+    socket.on('selectCharacter', (data) => {
+        const room = rooms.get(data.roomId);
+        if (room) {
+            if (room.player1 === socket.id) {
+                room.gameState.player1 = data.character;
+            } else if (room.player2 === socket.id) {
+                room.gameState.player2 = data.character;
+            }
+            
+            // Broadcast to other player
+            socket.to(data.roomId).emit('characterSelected', {
+                playerId: socket.id,
+                character: data.character
+            });
+        }
+    });
+    
+    // Handle game ready
+    socket.on('gameReady', (data) => {
+        const room = rooms.get(data.roomId);
+        if (room) {
+            // Broadcast to other player
+            socket.to(data.roomId).emit('gameReady', {
+                playerId: socket.id
+            });
+        }
+    });
+    
+    // Handle chat messages
+    socket.on('chatMessage', (data) => {
+        const room = rooms.get(data.roomId);
+        if (room) {
+            // Broadcast to other player
+            socket.to(data.roomId).emit('chatMessage', {
+                playerId: socket.id,
+                message: data.message
+            });
+        }
+    });
+    
     // Handle disconnection
     socket.on('disconnect', () => {
         console.log(`User disconnected: ${socket.id}`);
@@ -110,13 +151,19 @@ io.on('connection', (socket) => {
         }
         
         // Notify other player in room
+        let roomToDelete = null;
         for (const [roomId, room] of rooms.entries()) {
             if (room.player1 === socket.id || room.player2 === socket.id) {
                 socket.to(roomId).emit('playerDisconnected');
-                rooms.delete(roomId);
-                console.log(`Room ${roomId} deleted due to disconnection`);
+                roomToDelete = roomId;
                 break;
             }
+        }
+        
+        // Delete room after iteration
+        if (roomToDelete) {
+            rooms.delete(roomToDelete);
+            console.log(`Room ${roomToDelete} deleted due to disconnection`);
         }
     });
 });
